@@ -66,3 +66,14 @@
     - name: Display output file location
       debug:
         msg: "Data written to {{ output_file }}"
+
+    - name: Copy file over SSH
+      copy:
+        src: "{{ output_file }}"
+        dest: "{{remote_path}}{{ output_file }}"
+      delegate_to: "{{ remote_host }}"
+      become: yes
+      vars:
+        ansible_ssh_user: "{{ remote_user }}"
+        ansible_ssh_pass: "{{ remote_password }}"
+        ansible_become_pass: "{{ become_password }}"
