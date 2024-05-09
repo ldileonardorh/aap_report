@@ -1,0 +1,82 @@
+---
+- name: Fetch and Save Job Templates
+  hosts: localhost
+  gather_facts: no
+  vars:
+    base_url: '{{ base_url }}'
+    api_url: '/api/v2/unified_job_templates/?or__type=job_template&or__type=workflow_job_template'
+    job_api_url: '/api/v2/unified_jobs/?or__type=job&or__type=workflow_job'
+    headers:
+      Authorization: '{{ bearer_token }}'
+    template_output_file: 'ansible_template_report.csv'
+    job_output_file: 'ansible_job_report.csv'
+    separator: '|'
+    timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+    # output_file: "{{ template_output_file.split('.')[0] }}_{{ timestamp }}.csv"
+    output_file: 'ansible_template_report.csv'
+    next_url: "{{ base_url }}{{ api_url }}"
+    jobs_next_url: "{{ base_url }}{{ job_api_url }}"
+  tasks:
+    - name: Initialize the CSV file with headers
+      copy:
+        dest: "{{ output_file }}"
+        content: |
+          ORGANIZATION_NAME|ORGANIZATION_DESCRIPTION|TEMPLATE_ID|TEMPLATE_TYPE|TEMPLATE_NAME|TEMPLATE_DESCRIPTION|TEMPLATE_CREATED_BY|TEMPLATE_CREATION_DATE|TEMPLATE_EDIT_DATE|PLAYBOOK|HAS_SURVEY|PROJECT_ID|PROJECT_NAME|PROJECT_DESCRIPTION|TOTAL_EXECUTED_JOBS|LAST_JOB_RUN|LAST_JOB_FAILED|NEXT_JOB_RUN
+
+    - name: Fetch and write template data - initial request
+      uri:
+        url: "{{ next_url }}"
+        headers: "{{ headers }}"
+        return_content: yes
+        validate_certs: no
+      register: response
+
+    - name: Write template data to CSV - initial request
+      lineinfile:
+        dest: "{{ output_file }}"
+        line: "{{ item.summary_fields.organization.name }}|{{ item.summary_fields.organization.description }}|{{ item.id }}|{{ item.type }}|{{ item.name }}|{{ item.description }}|{{ item.summary_fields.created_by.username }}|{{ item.created }}|{{ item.modified }}|{{ item.playbook | default('') }}|{{ item.survey_enabled }}|{{ item.summary_fields.project.id | default('') }}|{{ item.summary_fields.project.name | default('') }}|{{ item.summary_fields.project.description | default('') }}|{{ item.summary_fields.recent_jobs | length }}|{{ item.last_job_run }}|{{ item.last_job_failed }}|{{ item.next_job_run }}"
+      with_items: "{{ response.json.results }}"
+      when: response.json.results is defined and response.json.results | length > 0
+
+    - name: Set next_url for next request
+      set_fact:
+        next_url: "{{ response.json.next if response.json.next else None }}"
+
+    - name: Fetch and write template data - loop
+      block:
+        # - name: Fetch next page of job templates
+        #   uri:
+        #     url: "{{ next_url }}"
+        #     headers: "{{ headers }}"
+        #     return_content: yes
+        #   register: response_page
+
+        - name: Write template data to CSV - next pages
+          lineinfile:
+            dest: "{{ output_file }}"
+            line: "{{ item.summary_fields.organization.name }}|{{ item.summary_fields.organization.description }}|{{ item.id }}|{{ item.type }}|{{ item.name }}|{{ item.description }}|{{ item.summary_fields.created_by.username }}|{{ item.created }}|{{ item.modified }}|{{ item.playbook | default('') }}|{{ item.survey_enabled }}|{{ item.summary_fields.project.id | default('') }}|{{ item.summary_fields.project.name | default('') }}|{{ item.summary_fields.project.description | default('') }}|{{ item.summary_fields.recent_jobs | length }}|{{ item.last_job_run }}|{{ item.last_job_failed }}|{{ item.next_job_run }}"
+          with_items: "{{ response_page.json.results }}"
+          when: response_page.json.results is defined and response_page.json.results | length > 0
+
+        # - name: Set next_url for next request - loop
+        #   set_fact:
+        #     next_url: "{{ response_page.json.next if response_page.json.next else None }}"
+        #   when: next_url is not none
+        #   until: next_url is none
+        #   retries: 10
+        #   delay: 2
+
+    - name: Display output file location
+      debug:
+        msg: "Data written to {{ output_file }}"
+
+    - name: Copy file over SSH
+      copy:
+        src: "{{ output_file }}"
+        dest: "{{remote_path}}{{ output_file }}"
+      delegate_to: "{{ remote_host }}"
+      become: yes
+      vars:
+        ansible_ssh_user: "{{ remote_user }}"
+        ansible_ssh_pass: "{{ remote_password }}"
+        ansible_become_pass: "{{ become_password }}"
