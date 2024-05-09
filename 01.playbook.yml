@@ -25,6 +25,7 @@
         url: "{{ next_url }}"
         headers: "{{ headers }}"
         return_content: yes
+        validate_certs: no
       register: response
 
     - name: Write template data to CSV - initial request

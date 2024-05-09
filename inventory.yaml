@@ -1,0 +1,10 @@
+all:
+  hosts:
+    localhost:
+      ansible_connection: local
+  vars:
+    base_url: https://example.com
+    api_url: /api/v2/unified_job_templates/
+    headers:
+      Authorization: "Bearer YOUR_TOKEN"
+
