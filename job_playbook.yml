@@ -36,6 +36,8 @@
         line: "{{ job.id }}|{{ job.unified_job_template }}|{{ job.type }}|{{ job.launch_type }}|{{ job.started }}|{{ job.finished }}|{{ job.status }}"
       with_items: "{{ response.json.results }}"
       when: response.json.results is defined and response.json.results | length > 0
+      loop_control:
+        loop_var: job
 
     # - name: Set jobs_next_url for next request
     #   set_fact:
@@ -62,7 +64,8 @@
             line: "{{ job.id }}|{{ job.unified_job_template }}|{{ job.type }}|{{ job.launch_type }}|{{ job.started }}|{{ job.finished }}|{{ job.status }}"
           with_items: "{{ response_page.json.results }}"
           when: response_page.json.results is defined and response_page.json.results | length > 0
-
+          loop_control:
+            loop_var: job
         # - name: Set jobs_next_url for next request - loop
         #   set_fact:
         #     jobs_next_url: "{{ response_page.json.next }}"
