@@ -86,8 +86,8 @@
 
     - name: Copy file over SSH
       copy:
-        src: "{{ output_file }}"
-        dest: "{{remote_path}}{{ output_file }}"
+        src: "{{ job_output_file }}"
+        dest: "{{remote_path}}{{ job_output_file }}"
       delegate_to: "{{ remote_host }}"
       become: yes
       vars:
