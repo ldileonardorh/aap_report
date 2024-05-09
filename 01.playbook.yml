@@ -12,6 +12,7 @@
     job_output_file: 'ansible_job_report.csv'
     separator: '|'
     timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+    # output_file: "{{ template_output_file.split('.')[0] }}_{{ timestamp }}.csv"
     output_file: 'ansible_template_report.csv'
     next_url: "{{ base_url }}{{ api_url }}"
     jobs_next_url: "{{ base_url }}{{ job_api_url }}"
@@ -43,14 +44,12 @@
 
     - name: Fetch and write template data - loop
       block:
-        - name: Fetch next page of job templates
-          uri:
-            url: "{{ next_url }}"
-            headers: "{{ headers }}"
-            return_content: yes
-            validate_certs: no
-          register: response_page
-          when: next_url is defined and next_url != "null"
+        # - name: Fetch next page of job templates
+        #   uri:
+        #     url: "{{ next_url }}"
+        #     headers: "{{ headers }}"
+        #     return_content: yes
+        #   register: response_page
 
         - name: Write template data to CSV - next pages
           lineinfile:
@@ -59,125 +58,22 @@
           with_items: "{{ response_page.json.results }}"
           when: response_page.json.results is defined and response_page.json.results | length > 0
 
-        - name: Set next_url for next request - loop
-          set_fact:
-            next_url: "{{ response_page.json.next if response_page.json.next else None }}"
-          when: response_page.json.next is defined and response_page.json.next != "null"
-          until: next_url is not defined or next_url == "null"
-          retries: 10
-          delay: 2
+        # - name: Set next_url for next request - loop
+        #   set_fact:
+        #     next_url: "{{ response_page.json.next if response_page.json.next else None }}"
+        #   when: next_url is not none
+        #   until: next_url is none
+        #   retries: 10
+        #   delay: 2
 
     - name: Display output file location
       debug:
         msg: "Data written to {{ output_file }}"
 
-    # Manage jobs
-    - name: Initialize the Jobs CSV file with headers
-      copy:
-        dest: "{{ job_output_file }}"
-        content: |
-          JOB_ID|JOB_TEMPLATE_ID|JOB_TEMPLATE_TYPE|LAUNCH_TYPE|START_DATE|END_DATE|STATUS
-
-    - name: Debug jobs_next_url before initial request
-      debug:
-        msg: "Initial jobs_next_url: {{ jobs_next_url }}"
-
-    - name: Fetch and write job data - initial request
-      uri:
-        url: "{{ jobs_next_url }}"
-        headers: "{{ headers }}"
-        return_content: yes
-        validate_certs: no
-      register: job_response
-
-    - name: Write job data to CSV - initial request
-      lineinfile:
-        dest: "{{ job_output_file }}"
-        line: "{{ item.id }}|{{ item.unified_job_template }}|{{ item.type }}|{{ item.launch_type }}|{{ item.started }}|{{ item.finished }}|{{ item.status }}"
-      with_items: "{{ job_response.json.results }}"
-      when: job_response.json.results is defined and job_response.json.results | length > 0
-
-    - name: Set jobs_next_url for next request
-      set_fact:
-        jobs_next_url: "{{ job_response.json.next if job_response.json.next else None }}"
-
-    - name: Debug jobs_next_url after initial request
-      debug:
-        msg: "jobs_next_url after initial request: {{ jobs_next_url }}"
-
-    - name: Fetch and write job data - loop
-      block:
-        - name: Fetch next page of job data
-          uri:
-            url: "{{ jobs_next_url }}"
-            headers: "{{ headers }}"
-            return_content: yes
-            validate_certs: no
-          register: response_page
-          when: jobs_next_url is defined and jobs_next_url != "null"
-
-        - name: Write job data to CSV - next pages
-          lineinfile:
-            dest: "{{ job_output_file }}"
-            line: "{{ item.id }}|{{ item.unified_job_template }}|{{ item.type }}|{{ item.launch_type }}|{{ item.started }}|{{ item.finished }}|{{ item.status }}"
-          with_items: "{{ response_page.json.results }}"
-          when: response_page.json.results is defined and response_page.json.results | length > 0
-
-        - name: Set jobs_next_url for next request - loop
-          set_fact:
-            jobs_next_url: "{{ response_page.json.next if response_page.json.next else None }}"
-          when: response_page.json.next is defined and response_page.json.next != "null"
-          until: jobs_next_url is not defined or jobs_next_url == "null"
-          retries: 10
-          delay: 2
-
-        - name: Debug jobs_next_url in loop
-          debug:
-            msg: "jobs_next_url in loop: {{ jobs_next_url }}"
-
-    - name: Display Jobs file output file location
-      debug:
-        msg: "Data written to {{ job_output_file }}"
-
-    # Create folder
-    - name: Generate timestamp
-      shell: "date +%Y%m%d%H%M%S"
-      register: timestamp
-      delegate_to: localhost
-
-    - name: Set the remote directory path
-      set_fact:
-        remote_directory: "{{ remote_path }}{{ timestamp.stdout }}"
-
-    - name: Create directory with timestamp on remote host
-      file:
-        path: "{{ remote_directory }}"
-        state: directory
-        mode: '0755'
-      delegate_to: "{{ remote_host }}"
-      become: yes
-      vars:
-        ansible_ssh_user: "{{ remote_user }}"
-        ansible_ssh_pass: "{{ remote_password }}"
-        ansible_become_pass: "{{ become_password }}"
-
-    # Copy template report over SSH
-    - name: Copy template report over SSH
+    - name: Copy file over SSH
       copy:
         src: "{{ output_file }}"
-        dest: "{{ remote_directory }}/{{ output_file }}"
-      delegate_to: "{{ remote_host }}"
-      become: yes
-      vars:
-        ansible_ssh_user: "{{ remote_user }}"
-        ansible_ssh_pass: "{{ remote_password }}"
-        ansible_become_pass: "{{ become_password }}"
-
-    # Copy job report over SSH
-    - name: Copy job report over SSH
-      copy:
-        src: "{{ job_output_file }}"
-        dest: "{{ remote_directory }}/{{ job_output_file }}"
+        dest: "{{remote_path}}{{ output_file }}"
       delegate_to: "{{ remote_host }}"
       become: yes
       vars:
