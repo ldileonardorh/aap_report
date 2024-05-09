@@ -33,7 +33,7 @@
     - name: Write job data to CSV - initial request
       lineinfile:
         dest: "{{ job_output_file }}"
-        line: "{{ item.id }}|{{ item.unified_job_template }}|{{ item.type }}|{{ item.launch_type }}|{{ item.started }}|{{ item.finished }}|{{ item.status }}"
+        line: "{{ job.id }}|{{ job.unified_job_template }}|{{ job.type }}|{{ job.launch_type }}|{{ job.started }}|{{ job.finished }}|{{ job.status }}"
       with_items: "{{ response.json.results }}"
       when: response.json.results is defined and response.json.results | length > 0
 
@@ -59,7 +59,7 @@
         - name: Write job data to CSV - next pages
           lineinfile:
             dest: "{{ job_output_file }}"
-            line: "{{ item.id }}|{{ item.unified_job_template }}|{{ item.type }}|{{ item.launch_type }}|{{ item.started }}|{{ item.finished }}|{{ item.status }}"
+            line: "{{ job.id }}|{{ job.unified_job_template }}|{{ job.type }}|{{ job.launch_type }}|{{ job.started }}|{{ job.finished }}|{{ job.status }}"
           with_items: "{{ response_page.json.results }}"
           when: response_page.json.results is defined and response_page.json.results | length > 0
 
