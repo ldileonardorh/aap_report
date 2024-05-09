@@ -3,10 +3,10 @@
   hosts: localhost
   gather_facts: no
   vars:
-    base_url: ''
+    base_url: '{{base_url}}'
     api_url: '/api/v2/unified_job_templates/?or__type=job_template&or__type=workflow_job_template'
     headers:
-      Authorization: ''
+      Authorization: '{{bearer_token}}'
     template_output_file: 'ansible_template_report.csv'
     separator: '|'
     timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
