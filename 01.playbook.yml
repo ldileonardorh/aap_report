@@ -3,11 +3,11 @@
   hosts: localhost
   gather_facts: no
   vars:
-    base_url: 'https://automation-controller-ac-4sqzs.apps.shared-410.openshift.redhatworkshops.io'
+    base_url: '{{ base_url }}'
     api_url: '/api/v2/unified_job_templates/?or__type=job_template&or__type=workflow_job_template'
     job_api_url: '/api/v2/unified_jobs/?or__type=job&or__type=workflow_job'
     headers:
-      Authorization: 'Bearer ivV6uJ4AgchHL2b1Ctu9PGQxEBA5iX'
+      Authorization: '{{ bearer_token }}'
     template_output_file: 'ansible_template_report.csv'
     job_output_file: 'ansible_job_report.csv'
     separator: '|'
