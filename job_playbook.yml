@@ -38,6 +38,7 @@
       when: response.json.results is defined and response.json.results | length > 0
       loop_control:
         loop_var: job
+      ignore_errors: yes
 
     # - name: Set jobs_next_url for next request
     #   set_fact:
@@ -66,6 +67,7 @@
           when: response_page.json.results is defined and response_page.json.results | length > 0
           loop_control:
             loop_var: job
+          ignore_errors: yes
         # - name: Set jobs_next_url for next request - loop
         #   set_fact:
         #     jobs_next_url: "{{ response_page.json.next }}"
