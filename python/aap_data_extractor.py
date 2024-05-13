@@ -10,7 +10,7 @@ RESET = '\033[0m'  # Reset the color
                                                                                                             
 # Setup
 base_url = ''
-headers = 
+headers = ''
 
 now = datetime.now()
 timestamp = now.strftime("%Y%m%d%H%M%S")

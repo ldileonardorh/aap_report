@@ -1,6 +1,162 @@
-# main_playbook.yml
-- name: Main playbook
-  hosts: all
+---
+- name: Gather job data and template data from API and write to CSV
+  hosts: localhost
+  gather_facts: no
+  vars:
+    base_url: "{{ base_url }}"
+    headers:
+      Authorization: "{{ bearer_token }}"
+    job_api_url: "{{ job_api_url }}"
+    template_api_url: "{{ template_api_url }}"
+    base_output_folder: 'AAP_Report'
+    timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+    job_template_output_file: 'RM_AAP_Jobs.csv'
+    unified_template_output_file: 'RM_AAP_Templates.csv'
+    output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
+    separator: '|'
+    job_csv_headers:
+      - 'JOB_ID'
+      - 'JOB_TEMPLATE_ID'
+      - 'JOB_TEMPLATE_TYPE'
+      - 'LAUNCH_TYPE'
+      - 'START_DATE'
+      - 'END_DATE'
+      - 'STATUS'
+    template_csv_headers:
+      - 'ORGANIZATION_NAME'
+      - 'ORGANIZATION_DESCRIPTION'
+      - 'TEMPLATE_ID'
+      - 'TEMPLATE_TYPE'
+      - 'TEMPLATE_NAME'
+      - 'TEMPLATE_DESCRIPTION'
+      - 'TEMPLATE_CREATED_BY'
+      - 'TEMPLATE_CREATION_DATE'
+      - 'TEMPLATE_EDIT_DATE'
+      - 'PLAYBOOK'
+      - 'HAS_SURVEY'
+      - 'PROJECT_ID'
+      - 'PROJECT_NAME'
+      - 'PROJECT_DESCRIPTION'
+      - 'TOTAL_EXECUTED_JOBS'
+      - 'LAST_JOB_RUN'
+      - 'LAST_JOB_FAILED'
+      - 'NEXT_JOB_RUN'
 
-- import_playbook: template_playbook.yml
-- import_playbook: job_playbook.yml
+  tasks:
+    # - name: Calculate start date for the last month
+    #   set_fact:
+    #     start_date: "{{ (ansible_date_time.date | regex_replace('(-[0-9]{2})$', '-01')) | to_datetime('%Y-%m-%d') | date | strftime('%Y-%m-01') | to_datetime('%Y-%m-%d') | subtract_days(1) | strftime('%Y-%m-%d') }}"
+   
+    - name: Set output folder fact
+      set_fact:
+        output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
+        job_output_file: "{{ output_folder }}{{ job_template_output_file }}"
+        template_output_file: "{{ output_folder }}{{ unified_template_output_file }}"
+
+    - name: Ensure output directory exists
+      file:
+        path: "{{ output_folder }}"
+        state: directory
+
+    - name: Initialize job CSV file with headers
+      copy:
+        dest: "{{ job_output_file }}"
+        content: "{{ job_csv_headers | join(separator) }}\n"
+
+    - name: Initialize template CSV file with headers
+      copy:
+        dest: "{{ template_output_file }}"
+        content: "{{ template_csv_headers | join(separator) }}\n"
+
+    - name: Fetch job data and write to CSV
+      vars:
+        current_url: "{{ base_url }}{{ job_api_url }}"
+      block:
+        - name: Repeat fetching job data until all pages are retrieved
+          uri:
+            url: "{{ current_url }}"
+            headers: "{{ headers }}"
+            method: GET
+            return_content: yes
+            status_code: 200
+            validate_certs: no
+          register: job_data_response
+          until: job_data_response.json.next is none
+          retries: 5
+          delay: 1
+
+        - name: Parse job data JSON
+          set_fact:
+            job_data: "{{ job_data_response.json }}"
+
+        - name: Write job data to CSV
+          lineinfile:
+            dest: "{{ job_output_file }}"
+            line: "{{ item.id }}{{ separator }}{{ item.unified_job_template }}{{ separator }}{{ item.type }}{{ separator }}{{ item.launch_type }}{{ separator }}{{ item.started }}{{ separator }}{{ item.finished }}{{ separator }}{{ item.status }}"
+            create: no
+          loop: "{{ job_data.results }}"
+
+        - name: Set next page URL if available
+          set_fact:
+            current_url: "{{ job_data.next }}"
+          when: job_data.next is defined and job_data.next != None
+
+    - name: Fetch template data and write to CSV
+      vars:
+        current_url: "{{ base_url }}{{ template_api_url }}"
+      block:
+        - name: Repeat fetching template data until all pages are retrieved
+          uri:
+            url: "{{ current_url }}"
+            headers: "{{ headers }}"
+            method: GET
+            return_content: yes
+            status_code: 200
+            validate_certs: no
+          register: template_data_response
+          until: template_data_response.json.next is none
+          retries: 5
+          delay: 1
+
+        - name: Parse template data JSON
+          set_fact:
+            template_data: "{{ template_data_response.json }}"
+
+        - name: Write template data to CSV
+          lineinfile:
+            dest: "{{ template_output_file }}"
+            line: "{{ item.summary_fields.organization.name }}{{ separator }}{{ item.summary_fields.organization.description }}{{ separator }}{{ item.id }}{{ separator }}{{ item.type }}{{ separator }}{{ item.name }}{{ separator }}{{ item.description }}{{ separator }}{{ item.summary_fields.created_by.username }}{{ separator }}{{ item.created }}{{ separator }}{{ item.modified }}{{ separator }}{{ item.playbook | default('') }}{{ separator }}{{ item.survey_enabled }}{{ separator }}{{ item.summary_fields.project.id | default('') }}{{ separator }}{{ item.summary_fields.project.name | default('') }}{{ separator }}{{ item.summary_fields.project.description | default('') }}{{ separator }}{{ item.summary_fields.recent_jobs | length }}{{ separator }}{{ item.last_job_run }}{{ separator }}{{ item.last_job_failed }}{{ separator }}{{ item.next_job_run }}"
+            create: no
+          loop: "{{ template_data.results }}"
+
+        - name: Set next page URL if available
+          set_fact:
+            current_url: "{{ template_data.next }}"
+          when: template_data.next is defined and template_data.next != None
+
+    - name: Display success message
+      debug:
+        msg: "Job data written to {{ job_output_file }} and template data written to {{ template_output_file }}"
+
+    # Copy data to remote hosts
+    - name: JOBS - Copy file over SSH
+      copy:
+        src: "{{ job_output_file }}"
+        dest: "{{remote_path}}{{ job_output_file }}"
+      delegate_to: "{{ remote_host }}"
+      become: yes
+      vars:
+        ansible_ssh_user: "{{ remote_user }}"
+        ansible_ssh_pass: "{{ remote_password }}"
+        ansible_become_pass: "{{ become_password }}"
+    
+    - name: TEMPLATES - Copy file over SSH
+      copy:
+        src: "{{ template_output_file }}"
+        dest: "{{remote_path}}{{ template_output_file }}"
+      delegate_to: "{{ remote_host }}"
+      become: yes
+      vars:
+        ansible_ssh_user: "{{ remote_user }}"
+        ansible_ssh_pass: "{{ remote_password }}"
+        ansible_become_pass: "{{ become_password }}"
