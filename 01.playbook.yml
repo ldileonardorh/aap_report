@@ -115,7 +115,7 @@
             validate_certs: no
           register: template_data_response
           until: template_data_response.json.next is none
-          retries: 5
+          retries: 0
           delay: 1
 
         - name: Parse template data JSON
