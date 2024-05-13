@@ -82,7 +82,7 @@
             validate_certs: no
           register: job_data_response
           until: job_data_response.json.next is none
-          retries: 5
+          retries: 0
           delay: 1
 
         - name: Parse job data JSON
