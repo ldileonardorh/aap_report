@@ -74,7 +74,7 @@
       block:
         - name: Repeat fetching job data until all pages are retrieved
           uri:
-            url: "{{ current_url }}"
+            url: "{{ base_url }}{{ job_api_url }}"
             headers: "{{ headers }}"
             method: GET
             return_content: yes
