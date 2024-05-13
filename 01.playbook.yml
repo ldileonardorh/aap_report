@@ -3,11 +3,11 @@
   hosts: localhost
   gather_facts: no
   vars:
-    base_url: "{{ base_url }}"
+    # base_url: "{{ base_url }}"
     headers:
       Authorization: "{{ bearer_token }}"
-    job_api_url: "{{ job_api_url }}"
-    template_api_url: "{{ template_api_url }}"
+    # job_api_url: "{{ job_api_url }}"
+    # template_api_url: "{{ template_api_url }}"
     base_output_folder: 'AAP_Report'
     timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
     job_template_output_file: 'RM_AAP_Jobs.csv'
