@@ -107,7 +107,7 @@
       block:
         - name: Repeat fetching template data until all pages are retrieved
           uri:
-            url: "{{ current_url }}"
+            url: "{{ base_url }}{{ template_api_url }}"
             headers: "{{ headers }}"
             method: GET
             return_content: yes
