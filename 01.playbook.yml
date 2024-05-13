@@ -138,6 +138,17 @@
       debug:
         msg: "Job data written to {{ job_output_file }} and template data written to {{ template_output_file }}"
 
+    # Create remote directory
+    - name: creare remote directory
+      ansible.builtin.command:
+        cmd: mkdir -p "{{remote_path}}{{ output_folder }}"
+      delegate_to: "{{ remote_host }}"
+      become: yes
+      vars:
+        ansible_ssh_user: "{{ remote_user }}"
+        ansible_ssh_pass: "{{ remote_password }}"
+        ansible_become_pass: "{{ become_password }}"
+
     # Copy data to remote hosts
     - name: JOBS - Copy file over SSH
       copy:
