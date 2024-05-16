@@ -6,14 +6,9 @@
     # base_url: "{{ base_url }}"
     headers:
       Authorization: "{{ bearer_token }}"
-    # job_api_url: "{{ job_api_url }}"
-    # template_api_url: "{{ template_api_url }}"
-    # base_output_folder: 'AAP_Report'
     timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
-    # job_template_output_file: 'RM_AAP_Jobs.csv'
-    # unified_template_output_file: 'RM_AAP_Templates.csv'
     output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
-    separator: '|'
+    # separator: '|'
     job_csv_headers:
       - 'JOB_ID'
       - 'JOB_TEMPLATE_ID'
