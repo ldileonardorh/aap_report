@@ -1,0 +1,5 @@
+{
+  "host1.example.com": ["value1"],
+  "host2.example.com": ["value2"],
+  "host3.example.com": ["value3"]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "",
+  "description": "",
+  "spec": [
+    {
+      "question_name": "inventory_host",
+      "question_description": "",
+      "required": true,
+      "type": "text",
+      "variable": "hostname",
+      "min": 0,
+      "max": 1024,
+      "default": "",
+      "choices": "",
+      "new_question": true
+    }
+  ]
+}
+
