@@ -43,7 +43,22 @@
       - 'NEXT_JOB_RUN'
 
   tasks:
-     
+    - name: Get the date 30 days ago
+      command: date --date='30 days ago' "+%Y-%m-%dT%H:%M:%S"
+      register: date_30_days_ago_output
+
+    - name: Set date_30_days_ago fact
+      set_fact:
+        date_30_days_ago: "{{ date_30_days_ago_output.stdout }}"
+
+    - name: Ensure my_variable is set
+      set_fact:
+        job_date_filter: "{{ start_date | default(date_30_days_ago) }}"
+
+    - name: Print result
+      debug:
+        msg: "Since Start Date is {{ job_date_filter }}"
+
     - name: Set output folder fact
       set_fact:
         output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
@@ -67,11 +82,11 @@
 
     - name: Fetch job data and write to CSV
       vars:
-        current_url: "{{ base_url }}{{ job_api_url }}"
+        current_url: "{{ base_url }}{{ job_api_url }}&created={{ job_date_filter }}"
       block:
         - name: Repeat fetching job data until all pages are retrieved
           uri:
-            url: "{{ base_url }}{{ job_api_url }}"
+            url: "{{ base_url }}{{ job_api_url }}&created={{ job_date_filter }}"
             headers: "{{ headers }}"
             method: GET
             return_content: yes
