@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Survey Form</title>
+</head>
+<body>
+    <form id="surveyForm">
+        <label for="combo1">Select Combo1:</label>
+        <select id="combo1" name="combo1" onchange="updateCombo2()">
+            <option value="host1.example.com">host1.example.com</option>
+            <option value="host2.example.com">host2.example.com</option>
+            <option value="host3.example.com">host3.example.com</option>
+        </select>
+        
+        <br><br>
+
+        <label for="combo2">Select Combo2:</label>
+        <select id="combo2" name="combo2">
+            <!-- Options will be dynamically populated based on combo1 selection -->
+        </select>
+        
+        <br><br>
+
+        <button type="button" onclick="submitForm()">Submit</button>
+    </form>
+
+    <script>
+        const dependencyMap = {
+            "combo_1": {
+                "host1.example.com": "value1",
+                "host2.example.com": "value2",
+                "host3.example.com": "value3"
+            },
+            "combo_2": {
+                "value1": "sample1",
+                "value2": "sample2",
+                "value3": "sample3"
+            }
+        };
+
+        function updateCombo2() {
+            const combo1 = document.getElementById('combo1').value;
+            const combo2 = document.getElementById('combo2');
+            
+            // Clear existing options
+            combo2.innerHTML = '';
+
+            // Get the corresponding value for combo2
+            const value1 = dependencyMap.combo_1[combo1];
+            const options = dependencyMap.combo_2[value1];
+
+            // Create new options for combo2
+            const optionElement = document.createElement('option');
+            optionElement.value = options;
+            optionElement.text = options;
+            combo2.appendChild(optionElement);
+        }
+
+        function submitForm() {
+            const combo1Value = document.getElementById('combo1').value;
+            const combo2Value = document.getElementById('combo2').value;
+            
+            // Replace this URL with your Ansible Tower API endpoint
+            const url = 'http://localhost:3000/api/v2/job_templates/11/launch/';
+            const data = {
+                combo1: combo1Value,
+                combo2: combo2Value
+            };
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer '
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                console.log('Success:', result);
+                alert('Form submitted successfully');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to submit form');
+            });
+        }
+    </script>
+</body>
+</html>
+

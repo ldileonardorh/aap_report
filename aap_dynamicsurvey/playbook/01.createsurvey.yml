@@ -1,0 +1,38 @@
+---
+- name: Process Dynamic Survey and Set combo2
+  hosts: localhost
+  tasks:
+
+    - name: Prepare survey spec with auto-selected combo2
+      set_fact:
+        survey_spec: {
+          "name": "Dynamic Survey Based on Host Selection",
+          "description": "Select options as per your requirements",
+          "spec": [
+            {
+              "question_name": "host_selection",
+              "question_description": "Choose a host:",
+              "required": true,
+              "type": "multiplechoice",
+              "variable": "selected_host",
+              "default": "host1.example.com",
+              "choices": [
+                "host1.example.com",
+                "host2.example.com",
+                "host3.example.com"
+              ]
+            }
+          ]
+        }
+
+    - name: Update survey in Ansible Tower
+      ansible.controller.job_template:
+        name: "Dynamic Survey Job Template"
+        survey_enabled: true
+        survey_spec: "{{ survey_spec }}"
+      environment:
+        TOWER_HOST: "https://automation-controller-ac-trnr7.apps.shared-410.openshift.redhatworkshops.io/"
+        TOWER_OAUTH_TOKEN: "p1SxmiV1BfGZYWseP76odjmz9bLCbD"
+      delegate_to: localhost
+      when: survey_spec is defined
+
