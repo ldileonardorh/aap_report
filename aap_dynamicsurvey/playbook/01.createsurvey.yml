@@ -31,8 +31,8 @@
         survey_enabled: true
         survey_spec: "{{ survey_spec }}"
       environment:
-        TOWER_HOST: "https://automation-controller-ac-trnr7.apps.shared-410.openshift.redhatworkshops.io/"
-        TOWER_OAUTH_TOKEN: "p1SxmiV1BfGZYWseP76odjmz9bLCbD"
+        TOWER_HOST: "{{ tower_host }}"
+        TOWER_OAUTH_TOKEN: "{{ tower_token }}"
       delegate_to: localhost
       when: survey_spec is defined
 
