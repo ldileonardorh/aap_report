@@ -17,6 +17,11 @@
         - any
 
   tasks:
+    - name: Ensure host and os are defined
+      fail:
+        msg: "Both host_selection and os must be defined in the survey."
+      when: host_selection is not defined or os is not defined
+
     - name: Validate OS and Host selection
       assert:
         that:

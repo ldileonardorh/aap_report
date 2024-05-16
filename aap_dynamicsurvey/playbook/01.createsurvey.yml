@@ -21,6 +21,14 @@
                 "host2.example.com",
                 "host3.example.com"
               ]
+            },
+            {
+              "question_name": "os",
+              "question_description": "Choose an os",
+              "required": true,
+              "type": "text",
+              "variable": "os",
+              "default": ""
             }
           ]
         }
