@@ -6,6 +6,11 @@
       command: python3 ../scripts/02.dummydata.py 
       register: generated_hosts
       changed_when: false
+    
+    - name: Generate OSs
+      command: python3 ../scripts/03.dummydata.py
+      register: generated_os
+      changed_when: false
 
     - name: Prepare survey spec with auto-selected combo2
       set_fact:
@@ -26,9 +31,10 @@
               "question_name": "os",
               "question_description": "Choose an os",
               "required": true,
-              "type": "text",
+              "type": "multiplechoice",
               "variable": "os",
-              "default": ""
+              "default": "",
+              "choices": "{{ generated_os.stdout | from_json }}"
             }
           ]
         }
