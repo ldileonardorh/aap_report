@@ -2,6 +2,10 @@
 - name: Process Dynamic Survey and Set combo2
   hosts: localhost
   tasks:
+    - name: Generate hostnames
+      command: python3 ../scripts/02.dummydata.py 
+      register: generated_hosts
+      changed_when: false
 
     - name: Prepare survey spec with auto-selected combo2
       set_fact:
@@ -16,11 +20,7 @@
               "type": "multiplechoice",
               "variable": "host_selection",
               "default": "host1.example.com",
-              "choices": [
-                "host1.example.com",
-                "host2.example.com",
-                "host3.example.com"
-              ]
+              "choices": "{{ generated_hosts.stdout | from_json }}" 
             },
             {
               "question_name": "os",
@@ -35,7 +35,7 @@
 
     - name: Update survey in Ansible Tower
       ansible.controller.job_template:
-        name: "Dynamic Survey Job Template"
+        name: "Prepopulated Survey"
         survey_enabled: true
         survey_spec: "{{ survey_spec }}"
       environment:
