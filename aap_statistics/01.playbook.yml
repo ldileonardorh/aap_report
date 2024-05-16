@@ -43,9 +43,6 @@
       - 'NEXT_JOB_RUN'
 
   tasks:
-    - name: Calculate the date 30 days ago
-      debug:
-        msg: "The date 30 days ago was {{ date_30_days_ago.stdout }}"
      
     - name: Set output folder fact
       set_fact:
