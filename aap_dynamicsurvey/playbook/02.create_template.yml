@@ -1,0 +1,30 @@
+---
+- name: Process Product Feedback
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    host_options:
+      Linux:
+        - Fedora
+        - CEntOS
+        - RHEL
+      Windows:
+        - Ten
+        - Eleven
+        - Seven
+      MacOS:
+        - any
+
+  tasks:
+    - name: Validate OS and Host selection
+      assert:
+        that:
+          - os in host_options[host_selection]
+        fail_msg: "The selected os does not match the category {{ host_selection }}."
+        success_msg: "The os {{ os }} is valid for category {{ host_selection }}."
+
+    - name: Display selected OS
+      debug:
+        msg: "You selected the os {{ os }} in the category {{ host_selection }}."
+

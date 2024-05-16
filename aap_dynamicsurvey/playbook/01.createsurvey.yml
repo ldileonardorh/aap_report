@@ -14,7 +14,7 @@
               "question_description": "Choose a host:",
               "required": true,
               "type": "multiplechoice",
-              "variable": "selected_host",
+              "variable": "host_selection",
               "default": "host1.example.com",
               "choices": [
                 "host1.example.com",
