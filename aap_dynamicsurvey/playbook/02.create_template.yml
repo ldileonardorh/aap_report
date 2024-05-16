@@ -5,15 +5,15 @@
 
   vars:
     host_options:
-      Linux:
+      host1.example.com:
         - Fedora
         - CEntOS
         - RHEL
-      Windows:
+      host2.example.com:
         - Ten
         - Eleven
         - Seven
-      MacOS:
+      host3.example.com:
         - any
 
   tasks:
