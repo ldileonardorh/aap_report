@@ -1,73 +1,88 @@
-# Ansible Playbook for Gathering Job and Template Data from API and Writing to CSV
+# README.md
 
-This Ansible playbook fetches job and template data from specified APIs, processes the data, and writes it to CSV files. It then transfers these files to remote hosts via SSH.
+## Overview
+
+This Ansible playbook gathers job and template data from specified APIs, writes the data to CSV files, and then transfers these files to a remote host. The playbook is designed to fetch data for the last 30 days by default and allows customization through variables.
 
 ## Prerequisites
 
-- Ansible installed on the control node.
-- APIs accessible from the control node.
-- Necessary credentials (bearer token) for API access.
-- Remote hosts accessible via SSH with the necessary credentials.
+- Ansible installed on the control node
+- API access with a bearer token
+- SSH access to the remote host
 
 ## Variables
 
-- `base_url`: Base URL of the API.
-- `bearer_token`: Bearer token for API authorization.
-- `job_api_url`: Endpoint URL for fetching job data.
-- `template_api_url`: Endpoint URL for fetching template data.
-- `base_output_folder`: Base folder for output files.
-- `timestamp`: Timestamp for uniquely identifying the output folder.
-- `job_template_output_file`: Filename for the job data CSV file.
-- `unified_template_output_file`: Filename for the template data CSV file.
-- `output_folder`: Full path for the output folder.
-- `separator`: Separator used in CSV files.
-- `job_csv_headers`: List of headers for the job data CSV file.
-- `template_csv_headers`: List of headers for the template data CSV file.
-- `remote_path`: Path on the remote host to copy the files to.
-- `remote_host`: The remote host to copy the files to.
-- `remote_user`: SSH username for the remote host.
-- `remote_password`: SSH password for the remote host.
-- `become_password`: Password for privilege escalation on the remote host.
+### Required Variables
 
-## Playbook Overview
+- `bearer_token`: Authorization token for API access
+- `base_output_folder`: Base directory for output files
+- `base_url`: Base URL for the API
+- `job_api_url`: Endpoint for job data API
+- `template_api_url`: Endpoint for template data API
+- `job_template_output_file`: Filename for job data CSV
+- `unified_template_output_file`: Filename for template data CSV
+- `remote_path`: Base directory on the remote host
+- `remote_host`: Remote host address
+- `remote_user`: SSH user for the remote host
+- `remote_password`: SSH password for the remote host
+- `become_password`: Password for privilege escalation on the remote host
 
-### Play: Gather job data and template data from API and write to CSV
+### Optional Variables
 
-#### Hosts
+- `start_date`: Start date for job data filtering (default is 30 days ago)
+- `separator`: CSV column separator (default is `|`)
 
-- `localhost`: This play runs on the control node itself.
+## Playbook Structure
 
-#### Vars
+### Vars
 
-- Sets up the necessary variables for API access, output file paths, and CSV headers.
+- `headers`: Contains the authorization token
+- `timestamp`: Timestamp for unique output folder naming
+- `output_folder`: Combined base folder and timestamp
+- `job_csv_headers`: Headers for the job data CSV
+- `template_csv_headers`: Headers for the template data CSV
 
-#### Tasks
+### Tasks
 
-1. **Set output folder fact**: Initializes the output folder and file paths.
-2. **Ensure output directory exists**: Creates the output directory if it doesn't exist.
-3. **Initialize job CSV file with headers**: Writes headers to the job data CSV file.
-4. **Initialize template CSV file with headers**: Writes headers to the template data CSV file.
-5. **Fetch job data and write to CSV**: 
-    - Fetches job data from the API.
-    - Parses the JSON response.
-    - Writes the job data to the CSV file.
-    - Handles pagination to ensure all job data is retrieved.
-6. **Fetch template data and write to CSV**: 
-    - Fetches template data from the API.
-    - Parses the JSON response.
-    - Writes the template data to the CSV file.
-    - Handles pagination to ensure all template data is retrieved.
-7. **Display success message**: Outputs a success message with the paths of the generated CSV files.
-8. **Copy job data CSV file over SSH**: Transfers the job data CSV file to the remote host.
-9. **Copy template data CSV file over SSH**: Transfers the template data CSV file to the remote host.
+1. **Get the date 30 days ago:** Fetches the date 30 days prior to the current date.
+2. **Set date_30_days_ago fact:** Stores the fetched date in a variable.
+3. **Ensure my_variable is set:** Sets the job date filter.
+4. **Print result:** Prints the start date for job data filtering.
+5. **Set output folder fact:** Sets the output folder and file paths.
+6. **Ensure output directory exists:** Creates the output directory if it doesn't exist.
+7. **Initialize job CSV file with headers:** Writes the headers to the job CSV file.
+8. **Initialize template CSV file with headers:** Writes the headers to the template CSV file.
+9. **Fetch job data and write to CSV:** Fetches job data from the API and writes it to the CSV file.
+10. **Fetch template data and write to CSV:** Fetches template data from the API and writes it to the CSV file.
+11. **Display success message:** Prints a success message with file paths.
+12. **Create remote directory:** Creates a directory on the remote host.
+13. **Copy job data to remote host:** Copies the job CSV file to the remote host.
+14. **Copy template data to remote host:** Copies the template CSV file to the remote host.
 
 ## Usage
 
-1. Clone this repository to your Ansible control node.
-2. Update the playbook variables as needed, especially the API URLs, bearer token, and remote host credentials.
-3. Run the playbook with the following command:
-   ```sh
-   ansible-playbook gather_and_write_data.yml
+1. Clone the repository or copy the playbook to your Ansible control node.
+2. Set the required variables in a `vars` file or directly in the playbook.
+3. Run the playbook using the following command:
+    ```bash
+    ansible-playbook -i localhost playbook.yml
+    ```
 
+## Example Variables File (vars.yml)
 
+```yaml
+bearer_token: "your_bearer_token_here"
+base_output_folder: "/path/to/output"
+base_url: "https://api.example.com"
+job_api_url: "/api/v1/jobs"
+template_api_url: "/api/v1/templates"
+job_template_output_file: "job_data.csv"
+unified_template_output_file: "template_data.csv"
+remote_path: "/remote/path/to/output"
+remote_host: "remote.example.com"
+remote_user: "your_remote_user"
+remote_password: "your_remote_password"
+become_password: "your_become_password"
+start_date: "2023-01-01T00:00:00"  # Optional
+separator: ","  # Optional
 
