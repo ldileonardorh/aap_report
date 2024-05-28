@@ -75,7 +75,7 @@
 
     - name: Fetch initial job data
       uri:
-        url: "{{ base_url }}{{ job_api_url }}&page_size=15000&created__gte={{ job_date_filter }}"
+        url: "{{ base_url }}{{ job_api_url }}&created__gte={{ job_date_filter }}"
         headers: "{{ headers | combine({'Connection': 'close'}) }}"
         method: GET
         return_content: yes
