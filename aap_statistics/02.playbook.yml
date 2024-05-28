@@ -114,8 +114,8 @@
         validate_certs: no
       register: job_data_response
       until: current_job_url is none
-      retries: 5
-      delay: 20
+      retries: 0
+      delay: 1
 
     - name: Parse job data JSON for next page
       when: fetch_remaining_jobs
