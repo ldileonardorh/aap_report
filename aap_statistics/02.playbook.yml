@@ -78,71 +78,67 @@
       vars:
         current_url: "{{ base_url }}{{ job_api_url }}&created__gte={{ job_date_filter }}"
       block:
-        - name: Repeat fetching job data until all pages are retrieved
-          block:
-            - name: Fetch job data from API
-              uri:
-                url: "{{ current_url }}"
-                headers: "{{ headers }}"
-                method: GET
-                return_content: yes
-                status_code: 200
-                validate_certs: no
-              register: job_data_response
-
-            - name: Parse job data JSON
-              set_fact:
-                job_data: "{{ job_data_response.json }}"
-
-            - name: Write job data to CSV
-              lineinfile:
-                dest: "{{ job_output_file }}"
-                line: "{{ item.id }}{{ separator }}{{ item.unified_job_template }}{{ separator }}{{ item.type }}{{ separator }}{{ item.launch_type }}{{ separator }}{{ item.started }}{{ separator }}{{ item.finished }}{{ separator }}{{ item.status }}"
-                create: no
-              loop: "{{ job_data.results }}"
-
-            - name: Set next page URL if available
-              set_fact:
-                current_url: "{{ job_data.next }}"
-              when: job_data.next is defined and job_data.next != None
-          until: current_url is not defined or current_url == None
+        - name: Fetch job data from API
+          uri:
+            url: "{{ current_url }}"
+            headers: "{{ headers }}"
+            method: GET
+            return_content: yes
+            status_code: 200
+            validate_certs: no
+          register: job_data_response
+          until: job_data_response.json.next is none
           retries: 100
           delay: 1
+
+        - name: Parse job data JSON
+          set_fact:
+            job_data: "{{ job_data_response.json }}"
+
+        - name: Write job data to CSV
+          lineinfile:
+            dest: "{{ job_output_file }}"
+            line: "{{ item.id }}{{ separator }}{{ item.unified_job_template }}{{ separator }}{{ item.type }}{{ separator }}{{ item.launch_type }}{{ separator }}{{ item.started }}{{ separator }}{{ item.finished }}{{ separator }}{{ item.status }}"
+            create: no
+          loop: "{{ job_data.results }}"
+
+        - name: Set next page URL if available
+          set_fact:
+            current_url: "{{ job_data.next }}"
+          when: job_data.next is defined and job_data.next != None
 
     - name: Fetch template data and write to CSV
       vars:
         current_url: "{{ base_url }}{{ template_api_url }}"
       block:
-        - name: Repeat fetching template data until all pages are retrieved
-          block:
-            - name: Fetch template data from API
-              uri:
-                url: "{{ current_url }}"
-                headers: "{{ headers }}"
-                method: GET
-                return_content: yes
-                status_code: 200
-                validate_certs: no
-              register: template_data_response
-
-            - name: Parse template data JSON
-              set_fact:
-                template_data: "{{ template_data_response.json }}"
-
-            - name: Write template data to CSV
-              lineinfile:
-                dest: "{{ template_output_file }}"
-                line: "{{ item.summary_fields.organization.name }}{{ separator }}{{ item.summary_fields.organization.description }}{{ separator }}{{ item.id }}{{ separator }}{{ item.type }}{{ separator }}{{ item.name }}{{ separator }}{{ item.description }}{{ separator }}{{ item.summary_fields.created_by.username }}{{ separator }}{{ item.created }}{{ separator }}{{ item.modified }}{{ separator }}{{ item.playbook | default('') }}{{ separator }}{{ item.survey_enabled }}{{ separator }}{{ item.summary_fields.project.id | default('') }}{{ separator }}{{ item.summary_fields.project.name | default('') }}{{ separator }}{{ item.summary_fields.project.description | default('') }}{{ separator }}{{ item.summary_fields.recent_jobs | length }}{{ separator }}{{ item.last_job_run }}{{ separator }}{{ item.last_job_failed }}{{ separator }}{{ item.next_job_run }}"
-                create: no
-              loop: "{{ template_data.results }}"
-
-            - name: Set next page URL if available
-              set_fact:
-                current_url: "{{ template_data.next }}"
-              when: template_data.next is defined and template_data.next != None
-          until: current_url is not defined or current_url == None
+        - name: Fetch template data from API
+          uri:
+            url: "{{ current_url }}"
+            headers: "{{ headers }}"
+            method: GET
+            return_content: yes
+            status_code: 200
+            validate_certs: no
+          register: template_data_response
+          until: template_data_response.json.next is none
           retries: 100
           delay: 1
+
+        - name: Parse template data JSON
+          set_fact:
+            template_data: "{{ template_data_response.json }}"
+
+        - name: Write template data to CSV
+          lineinfile:
+            dest: "{{ template_output_file }}"
+            line: "{{ item.summary_fields.organization.name }}{{ separator }}{{ item.summary_fields.organization.description }}{{ separator }}{{ item.id }}{{ separator }}{{ item.type }}{{ separator }}{{ item.name }}{{ separator }}{{ item.description }}{{ separator }}{{ item.summary_fields.created_by.username }}{{ separator }}{{ item.created }}{{ separator }}{{ item.modified }}{{ separator }}{{ item.playbook | default('') }}{{ separator }}{{ item.survey_enabled }}{{ separator }}{{ item.summary_fields.project.id | default('') }}{{ separator }}{{ item.summary_fields.project.name | default('') }}{{ separator }}{{ item.summary_fields.project.description | default('') }}{{ separator }}{{ item.summary_fields.recent_jobs | length }}{{ separator }}{{ item.last_job_run }}{{ separator }}{{ item.last_job_failed }}{{ separator }}{{ item.next_job_run }}"
+            create: no
+          loop: "{{ template_data.results }}"
+
+        - name: Set next page URL if available
+          set_fact:
+            current_url: "{{ template_data.next }}"
+          when: template_data.next is defined and template_data.next != None
 
     - name: Display success message
       debug:
