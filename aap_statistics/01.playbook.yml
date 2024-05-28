@@ -80,7 +80,7 @@
       block:
         - name: Repeat fetching job data until all pages are retrieved
           uri:
-            url: "{{ base_url }}{{ job_api_url }}&created__gte={{ job_date_filter }}"
+            url: "{{ current_url }}"
             headers: "{{ headers }}"
             method: GET
             return_content: yes
@@ -88,8 +88,8 @@
             validate_certs: no
           register: job_data_response
           until: job_data_response.json.next is none
-          retries: 5
-          delay: 2
+          retries: 0
+          delay: 0
 
         - name: Parse job data JSON
           set_fact:
