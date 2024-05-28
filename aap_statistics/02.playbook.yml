@@ -168,8 +168,8 @@
         validate_certs: no
       register: template_data_response
       until: current_template_url is none
-      retries: 5
-      delay: 20
+      retries: 0
+      delay: 1
 
     - name: Parse template data JSON for next page
       when: fetch_remaining_templates
