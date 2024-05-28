@@ -102,7 +102,7 @@
     - name: Fetch job data next page
       when: fetch_remaining_jobs
       uri:
-        url: "{{ current_job_url }}"
+        url: "{{ base_url }}{{ current_job_url }}"
         headers: "{{ headers }}"
         method: GET
         return_content: yes
@@ -156,7 +156,7 @@
     - name: Fetch template data next page
       when: fetch_remaining_templates
       uri:
-        url: "{{ current_template_url }}"
+        url: "{{ base_url }}{{ current_template_url }}"
         headers: "{{ headers }}"
         method: GET
         return_content: yes
