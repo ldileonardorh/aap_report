@@ -5,6 +5,7 @@
   vars:
     headers:
       Authorization: "{{ bearer_token }}"
+      Connection: close
     timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
     output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
     job_csv_headers:
@@ -96,29 +97,36 @@
       loop: "{{ job_data.results }}"
 
     - name: Fetch remaining job data pages and write to CSV
-      while: current_job_url is not none
-      do:
-        - name: Fetch job data next page
-          uri:
-            url: "{{ current_job_url }}"
-            headers: "{{ headers }}"
-            method: GET
-            return_content: yes
-            status_code: 200
-            validate_certs: no
-          register: job_data_response
+      set_fact:
+        fetch_remaining_jobs: "{{ current_job_url is not none }}"
 
-        - name: Parse job data JSON for next page
-          set_fact:
-            job_data: "{{ job_data_response.json }}"
-            current_job_url: "{{ job_data_response.json.next }}"
+    - name: Fetch job data next page
+      when: fetch_remaining_jobs
+      uri:
+        url: "{{ base_url }}{{ current_job_url }}"
+        headers: "{{ headers }}"
+        method: GET
+        return_content: yes
+        status_code: 200
+        validate_certs: no
+      register: job_data_response
+      until: current_job_url is none
+      retries: 5
+      delay: 20
 
-        - name: Write job data to CSV for next page
-          lineinfile:
-            dest: "{{ job_output_file }}"
-            line: "{{ item.id }}{{ separator }}{{ item.unified_job_template }}{{ separator }}{{ item.type }}{{ separator }}{{ item.launch_type }}{{ separator }}{{ item.started }}{{ separator }}{{ item.finished }}{{ separator }}{{ item.status }}"
-            create: no
-          loop: "{{ job_data.results }}"
+    - name: Parse job data JSON for next page
+      when: fetch_remaining_jobs
+      set_fact:
+        job_data: "{{ job_data_response.json }}"
+        current_job_url: "{{ job_data_response.json.next }}"
+
+    - name: Write job data to CSV for next page
+      when: fetch_remaining_jobs
+      lineinfile:
+        dest: "{{ job_output_file }}"
+        line: "{{ item.id }}{{ separator }}{{ item.unified_job_template }}{{ separator }}{{ item.type }}{{ separator }}{{ item.launch_type }}{{ separator }}{{ item.started }}{{ separator }}{{ item.finished }}{{ separator }}{{ item.status }}"
+        create: no
+      loop: "{{ job_data.results }}"
 
     - name: Fetch initial template data
       uri:
@@ -143,29 +151,36 @@
       loop: "{{ template_data.results }}"
 
     - name: Fetch remaining template data pages and write to CSV
-      while: current_template_url is not none
-      do:
-        - name: Fetch template data next page
-          uri:
-            url: "{{ current_template_url }}"
-            headers: "{{ headers }}"
-            method: GET
-            return_content: yes
-            status_code: 200
-            validate_certs: no
-          register: template_data_response
+      set_fact:
+        fetch_remaining_templates: "{{ current_template_url is not none }}"
 
-        - name: Parse template data JSON for next page
-          set_fact:
-            template_data: "{{ template_data_response.json }}"
-            current_template_url: "{{ template_data_response.json.next }}"
+    - name: Fetch template data next page
+      when: fetch_remaining_templates
+      uri:
+        url: "{{ base_url }}{{ current_template_url }}"
+        headers: "{{ headers }}"
+        method: GET
+        return_content: yes
+        status_code: 200
+        validate_certs: no
+      register: template_data_response
+      until: current_template_url is none
+      retries: 5
+      delay: 20
 
-        - name: Write template data to CSV for next page
-          lineinfile:
-            dest: "{{ template_output_file }}"
-            line: "{{ item.summary_fields.organization.name }}{{ separator }}{{ item.summary_fields.organization.description }}{{ separator }}{{ item.id }}{{ separator }}{{ item.type }}{{ separator }}{{ item.name }}{{ separator }}{{ item.description }}{{ separator }}{{ item.summary_fields.created_by.username }}{{ separator }}{{ item.created }}{{ separator }}{{ item.modified }}{{ separator }}{{ item.playbook | default('') }}{{ separator }}{{ item.survey_enabled }}{{ separator }}{{ item.summary_fields.project.id | default('') }}{{ separator }}{{ item.summary_fields.project.name | default('') }}{{ separator }}{{ item.summary_fields.project.description | default('') }}{{ separator }}{{ item.summary_fields.recent_jobs | length }}{{ separator }}{{ item.last_job_run }}{{ separator }}{{ item.last_job_failed }}{{ separator }}{{ item.next_job_run }}"
-            create: no
-          loop: "{{ template_data.results }}"
+    - name: Parse template data JSON for next page
+      when: fetch_remaining_templates
+      set_fact:
+        template_data: "{{ template_data_response.json }}"
+        current_template_url: "{{ template_data_response.json.next }}"
+
+    - name: Write template data to CSV for next page
+      when: fetch_remaining_templates
+      lineinfile:
+        dest: "{{ template_output_file }}"
+        line: "{{ item.summary_fields.organization.name }}{{ separator }}{{ item.summary_fields.organization.description }}{{ separator }}{{ item.id }}{{ separator }}{{ item.type }}{{ separator }}{{ item.name }}{{ separator }}{{ item.description }}{{ separator }}{{ item.summary_fields.created_by.username }}{{ separator }}{{ item.created }}{{ separator }}{{ item.modified }}{{ separator }}{{ item.playbook | default('') }}{{ separator }}{{ item.survey_enabled }}{{ separator }}{{ item.summary_fields.project.id | default('') }}{{ separator }}{{ item.summary_fields.project.name | default('') }}{{ separator }}{{ item.summary_fields.project.description | default('') }}{{ separator }}{{ item.summary_fields.recent_jobs | length }}{{ separator }}{{ item.last_job_run }}{{ separator }}{{ item.last_job_failed }}{{ separator }}{{ item.next_job_run }}"
+        create: no
+      loop: "{{ template_data.results }}"
 
     - name: Display success message
       debug:
@@ -204,3 +219,4 @@
         ansible_ssh_user: "{{ remote_user }}"
         ansible_ssh_pass: "{{ remote_password }}"
         ansible_become_pass: "{{ become_password }}"
+
