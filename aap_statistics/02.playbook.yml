@@ -98,6 +98,10 @@
     - name: Fetch remaining job data pages and write to CSV
       set_fact:
         fetch_remaining_jobs: "{{ current_job_url is not none }}"
+    
+    - name: Debug url
+      ansible.builtin.debug:
+        msg: "Current job url is: {{ current_job_url }}"
 
     - name: Fetch job data next page
       when: fetch_remaining_jobs
