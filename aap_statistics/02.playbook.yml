@@ -111,7 +111,7 @@
       register: job_data_response
       until: current_job_url is none
       retries: 5
-      delay: 3
+      delay: 20
 
     - name: Parse job data JSON for next page
       when: fetch_remaining_jobs
@@ -165,7 +165,7 @@
       register: template_data_response
       until: current_template_url is none
       retries: 5
-      delay: 3
+      delay: 20
 
     - name: Parse template data JSON for next page
       when: fetch_remaining_templates
