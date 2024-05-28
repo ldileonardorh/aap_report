@@ -79,16 +79,16 @@
         current_url: "{{ base_url }}{{ job_api_url }}&created__gte={{ job_date_filter }}"
       block:
         - name: Repeat fetching job data until all pages are retrieved
-          while: current_url is defined and current_url != None
-          do:
-            uri:
-              url: "{{ current_url }}"
-              headers: "{{ headers }}"
-              method: GET
-              return_content: yes
-              status_code: 200
-              validate_certs: no
-            register: job_data_response
+          block:
+            - name: Fetch job data from API
+              uri:
+                url: "{{ current_url }}"
+                headers: "{{ headers }}"
+                method: GET
+                return_content: yes
+                status_code: 200
+                validate_certs: no
+              register: job_data_response
 
             - name: Parse job data JSON
               set_fact:
@@ -105,22 +105,25 @@
               set_fact:
                 current_url: "{{ job_data.next }}"
               when: job_data.next is defined and job_data.next != None
+          until: current_url is not defined or current_url == None
+          retries: 100
+          delay: 1
 
     - name: Fetch template data and write to CSV
       vars:
         current_url: "{{ base_url }}{{ template_api_url }}"
       block:
         - name: Repeat fetching template data until all pages are retrieved
-          while: current_url is defined and current_url != None
-          do:
-            uri:
-              url: "{{ current_url }}"
-              headers: "{{ headers }}"
-              method: GET
-              return_content: yes
-              status_code: 200
-              validate_certs: no
-            register: template_data_response
+          block:
+            - name: Fetch template data from API
+              uri:
+                url: "{{ current_url }}"
+                headers: "{{ headers }}"
+                method: GET
+                return_content: yes
+                status_code: 200
+                validate_certs: no
+              register: template_data_response
 
             - name: Parse template data JSON
               set_fact:
@@ -137,6 +140,9 @@
               set_fact:
                 current_url: "{{ template_data.next }}"
               when: template_data.next is defined and template_data.next != None
+          until: current_url is not defined or current_url == None
+          retries: 100
+          delay: 1
 
     - name: Display success message
       debug:
