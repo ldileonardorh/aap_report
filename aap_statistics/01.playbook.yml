@@ -87,7 +87,7 @@
             status_code: 200
             validate_certs: no
           register: job_data_response
-          until: job_data_response.json.next is none
+          # until: job_data_response.json.next is none
           retries: 0
           delay: 0
 
@@ -102,10 +102,10 @@
             create: no
           loop: "{{ job_data.results }}"
 
-        - name: Set next page URL if available
-          set_fact:
-            current_url: "{{ job_data.next }}&page_size=15000"
-          when: job_data.next is defined and job_data.next != None
+        # - name: Set next page URL if available
+        #   set_fact:
+        #     current_url: "{{ job_data.next }}&page_size=15000"
+        #   when: job_data.next is defined and job_data.next != None
 
     - name: Fetch template data and write to CSV
       vars:
