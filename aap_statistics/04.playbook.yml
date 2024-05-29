@@ -18,7 +18,7 @@
 
     - name: Setting booleans using complex argument style
       ansible.builtin.set_fact:
-        template_url_next: template_data_response.json.next
+        template_url_next: "{{ template_data_response.json.next }}"
 
     - name: Print next url
       ansible.builtin.debug:
