@@ -8,6 +8,10 @@
     validate_certs: no
   register: template_data_response
 
+- name: Print content
+  ansible.builtin.debug:
+    msg: "body: {{ template_data_response }}"
+
 - name: Setting booleans using complex argument style
   ansible.builtin.set_fact:
     template_url_next: "{{ template_data_response.json.get('next', None) if template_data_response.json is defined else None }}"
