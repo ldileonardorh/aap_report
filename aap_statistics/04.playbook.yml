@@ -1,0 +1,23 @@
+---
+- name: Gather job data and template data from API and write to CSV
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Fetch template data
+      uri:
+        url: "{{ base_url }}{{ template_api_url }}"
+        headers: "{{ headers }}"
+        method: GET
+        return_content: yes
+        status_code: 200
+        validate_certs: no
+      register: template_data_response
+
+    - name: Print next url
+      ansible.builtin.debug:
+        msg: "Next Template Url: {{ template_data_response.next }}"
+
+    - name: Include Task file
+      ansible.builtin.import_tasks:
+        file: tasks/02.task-fetch-templates.yml
+      when: template_data_response.next is defined and template_data_response.next != None

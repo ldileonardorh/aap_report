@@ -1,0 +1,14 @@
+- name: Fetch template data
+  uri:
+    url: "{{ base_url }}{{ template_data_response.next }}"
+    headers: "{{ headers }}"
+    method: GET
+    return_content: yes
+    status_code: 200
+    validate_certs: no
+  register: template_data_response
+
+- name: Print new next url
+  ansible.builtin.debug:
+    msg: "Next Template Url: {{ template_data_response.next }}"
+
