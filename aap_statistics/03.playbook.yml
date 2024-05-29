@@ -1,0 +1,114 @@
+---
+- name: Retrieve and Print Job Details from Ansible Automation Platform with Pagination
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    headers:
+      Authorization: "{{ bearer_token }}"
+    timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
+    output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
+    all_jobs: []
+    job_csv_headers:
+      - 'JOB_ID'
+      - 'JOB_TEMPLATE_ID'
+      - 'JOB_TEMPLATE_TYPE'
+      - 'LAUNCH_TYPE'
+      - 'START_DATE'
+      - 'END_DATE'
+      - 'STATUS'
+    template_csv_headers:
+      - 'ORGANIZATION_NAME'
+      - 'ORGANIZATION_DESCRIPTION'
+      - 'TEMPLATE_ID'
+      - 'TEMPLATE_TYPE'
+      - 'TEMPLATE_NAME'
+      - 'TEMPLATE_DESCRIPTION'
+      - 'TEMPLATE_CREATED_BY'
+      - 'TEMPLATE_CREATION_DATE'
+      - 'TEMPLATE_EDIT_DATE'
+      - 'PLAYBOOK'
+      - 'HAS_SURVEY'
+      - 'PROJECT_ID'
+      - 'PROJECT_NAME'
+      - 'PROJECT_DESCRIPTION'
+      - 'TOTAL_EXECUTED_JOBS'
+      - 'LAST_JOB_RUN'
+      - 'LAST_JOB_FAILED'
+      - 'NEXT_JOB_RUN'
+
+  tasks:
+    - name: Get the date 30 days ago
+      command: date --date='30 days ago' "+%Y-%m-%dT%H:%M:%S"
+      register: date_30_days_ago_output
+
+    - name: Set date_30_days_ago fact
+      set_fact:
+        date_30_days_ago: "{{ date_30_days_ago_output.stdout }}"
+
+    - name: Ensure my_variable is set
+      set_fact:
+        job_date_filter: "{{ start_date | default(date_30_days_ago) }}"
+
+    - name: Print result
+      debug:
+        msg: "Since Start Date is {{ job_date_filter }}"
+    
+    - name: Set output folder fact
+      set_fact:
+        output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
+        job_output_file: "{{ output_folder }}{{ job_template_output_file }}"
+        template_output_file: "{{ output_folder }}{{ unified_template_output_file }}"
+
+    - name: Ensure output directory exists
+      file:
+        path: "{{ output_folder }}"
+        state: directory
+
+    - name: Initialize job CSV file with headers
+      copy:
+        dest: "{{ job_output_file }}"
+        content: "{{ job_csv_headers | join(separator) }}\n"
+
+    - name: Initialize template CSV file with headers
+      copy:
+        dest: "{{ template_output_file }}"
+        content: "{{ template_csv_headers | join(separator) }}\n"
+
+    - name: Retrieve initial page of jobs
+      uri:
+        url: "{{ base_url }}{{ job_api_url }}&created__gte={{ job_date_filter }}"
+        method: GET
+        headers: "{{ headers }}"
+        validate_certs: no
+      register: result
+
+    - name: Add retrieved jobs to the list
+      set_fact:
+        all_jobs: "{{ all_jobs + result.json.results }}"
+
+    - name: Retrieve remaining pages of jobs
+      uri:
+        url: "{{ item }}"
+        method: GET
+        headers: "{{ headers }}"
+        validate_certs: no
+      register: result
+      until: result.json.next is none
+      delay: 2
+      retries: 100
+      with_items: "{{ result.json.next | default([]) }}"
+      when: result.json.next is not none
+
+    - name: Append jobs from remaining pages to the list
+      set_fact:
+        all_jobs: "{{ all_jobs + result.json.results }}"
+
+    - name: Print job details
+      debug:
+        msg: >
+          {% for job in all_jobs %}
+            Job ID: {{ job.id }}
+            Job Template ID: {{ job.job_template }}
+            Execution Date: {{ job.finished }}
+          {% endfor %}
