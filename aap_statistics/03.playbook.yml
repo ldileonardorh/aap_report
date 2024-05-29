@@ -126,8 +126,8 @@
 
         - name: Ensure loop continues until no more pages
           set_fact:
-            fetch_jobs: false
-          when: job_data.next is not defined or job_data.next == None
+            fetch_jobs: true
+          when: job_data.next != None
 
       # Job Block End
 
