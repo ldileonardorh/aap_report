@@ -9,6 +9,7 @@
     timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
     output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
     all_jobs: []
+    next_url: "{{ api_url }}{{ jobs_endpoint }}"
     job_csv_headers:
       - 'JOB_ID'
       - 'JOB_TEMPLATE_ID'
@@ -75,34 +76,42 @@
         dest: "{{ template_output_file }}"
         content: "{{ template_csv_headers | join(separator) }}\n"
 
-    - name: Retrieve initial page of jobs
+    - name: Retrieve jobs from Ansible Automation Platform
       uri:
-        url: "{{ base_url }}{{ job_api_url }}&created__gte={{ job_date_filter }}"
-        method: GET
-        headers: "{{ headers }}"
-        validate_certs: no
-      register: result
-
-    - name: Add retrieved jobs to the list
-      set_fact:
-        all_jobs: "{{ all_jobs + result.json.results }}"
-
-    - name: Retrieve remaining pages of jobs
-      uri:
-        url: "{{ item }}"
+        url: "{{ next_url }}"
         method: GET
         headers: "{{ headers }}"
         validate_certs: no
       register: result
       until: result.json.next is none
-      delay: 2
       retries: 100
-      with_items: "{{ result.json.next | default([]) }}"
-      when: result.json.next is not none
+      delay: 2
 
-    - name: Append jobs from remaining pages to the list
+    - name: Add retrieved jobs to the list
       set_fact:
         all_jobs: "{{ all_jobs + result.json.results }}"
+        next_url: "{{ result.json.next }}"
+
+    - name: Loop over paginated results
+      # until: next_url is none
+      # retries: 100
+      # delay: 2
+      block:
+        - name: Retrieve next page of jobs
+          uri:
+            url: "{{ base_url }}{{ next_url }}"
+            method: GET
+            headers: "{{ headers }}"
+            validate_certs: no
+          register: next_result
+
+        - name: Add jobs from next page to the list
+          set_fact:
+            all_jobs: "{{ all_jobs + next_result.json.results }}"
+
+        - name: Update next URL for pagination
+          set_fact:
+            next_url: "{{ next_result.json.next }}"
 
     - name: Print job details
       debug:
