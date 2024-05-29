@@ -18,9 +18,9 @@
 
     - name: Print next url
       ansible.builtin.debug:
-        msg: "Next Template Url: {{ template_data_response }}"
+        msg: "Next Template Url: {{ template_data_response.json.next }}"
 
     - name: Include Task file
       ansible.builtin.import_tasks:
         file: tasks/02.task-fetch-templates.yml
-      when: template_data_response.next is defined and template_data_response.next != None
+      when: template_data_response.json.next is defined and template_data_response.json.next != None

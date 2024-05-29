@@ -1,6 +1,6 @@
 - name: Fetch template data
   uri:
-    url: "{{ base_url }}{{ template_data_response.next }}"
+    url: "{{ base_url }}{{ template_data_response.json.next }}"
     headers: "{{ headers }}"
     method: GET
     return_content: yes
@@ -10,5 +10,5 @@
 
 - name: Print new next url
   ansible.builtin.debug:
-    msg: "Next Template Url: {{ template_data_response.next }}"
+    msg: "Next Template Url: {{ template_data_response.json.next }}"
 
