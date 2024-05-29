@@ -133,7 +133,7 @@
 
     - name: Prepare data lines for appending
       set_fact:
-        data_lines: "{{ item.summary_fields.organization.name }}|{{ item.summary_fields.organization.description }}|{{ item.id }}|{{ item.type }}|{{ item.name }}|{{ item.description }}|{{ item.summary_fields.created_by.username }}|{{ item.created }}|{{ item.modified }}|{{ item.playbook | default('') }}|{{ item.survey_enabled }}|{{ item.summary_fields.project.id | default('') }}|{{ item.summary_fields.project.name | default('') }}|{{ item.summary_fields.project.description | default('') }}|{{ item.summary_fields.recent_jobs | length }}|{{ item.last_job_run }}|{{ item.last_job_failed }}|{{ item.next_job_run }}"
+        data_lines: "{{ data_lines | default([]) + ['{{ item.summary_fields.organization.name }}|{{ item.summary_fields.organization.description }}|{{ item.id }}|{{ item.type }}|{{ item.name }}|{{ item.description }}|{{ item.summary_fields.created_by.username }}|{{ item.created }}|{{ item.modified }}|{{ item.playbook | default('') }}|{{ item.survey_enabled }}|{{ item.summary_fields.project.id | default('') }}|{{ item.summary_fields.project.name | default('') }}|{{ item.summary_fields.project.description | default('') }}|{{ item.summary_fields.recent_jobs | length }}|{{ item.last_job_run }}|{{ item.last_job_failed }}|{{ item.next_job_run }}'] }}"
       loop: "{{ extracted_data }}"
       loop_control:
         loop_var: item
@@ -143,7 +143,6 @@
         dest: "{{ template_output_file }}"
         content: "{{ data_lines | join('\n') }}\n"
         remote_src: no
-      when: data_lines is defined
 
     ## Remote Directory
     - name: creare remote directory
