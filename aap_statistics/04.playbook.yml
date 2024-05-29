@@ -128,12 +128,10 @@
         loop_var: item
 
     - name: Display id and type from extracted data
-      ansible.builtin.debug:
-        msg: "ITEM ID: {{ item.id }}{{ separator }}"
-      # lineinfile:
-      #   dest: "{{ template_output_file }}"
-      #   line: "{{ item.summary_fields.organization.name }}{{ separator }}{{ item.summary_fields.organization.description }}{{ separator }}{{ item.id }}{{ separator }}{{ item.type }}{{ separator }}{{ item.name }}{{ separator }}{{ item.description }}{{ separator }}{{ item.summary_fields.created_by.username }}{{ separator }}{{ item.created }}{{ separator }}{{ item.modified }}{{ separator }}{{ item.playbook | default('') }}{{ separator }}{{ item.survey_enabled }}{{ separator }}{{ item.summary_fields.project.id | default('') }}{{ separator }}{{ item.summary_fields.project.name | default('') }}{{ separator }}{{ item.summary_fields.project.description | default('') }}{{ separator }}{{ item.summary_fields.recent_jobs | length }}{{ separator }}{{ item.last_job_run }}{{ separator }}{{ item.last_job_failed }}{{ separator }}{{ item.next_job_run }}"
-      #   create: no
+      lineinfile:
+        dest: "{{ template_output_file }}"
+        line: "{{ item.summary_fields.organization.name }}|{{ item.summary_fields.organization.description }}|{{ item.id }}|{{ item.type }}|{{ item.name }}|{{ item.description }}|{{ item.summary_fields.created_by.username }}|{{ item.created }}|{{ item.modified }}|{{ item.playbook | default('') }}|{{ item.survey_enabled }}|{{ item.summary_fields.project.id | default('') }}|{{ item.summary_fields.project.name | default('') }}|{{ item.summary_fields.project.description | default('') }}|{{ item.summary_fields.recent_jobs | length }}|{{ item.last_job_run }}|{{ item.last_job_failed }}|{{ item.next_job_run }}"
+        create: no
       loop: "{{ extracted_data }}"
       loop_control:
         loop_var: item
