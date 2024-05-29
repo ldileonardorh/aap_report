@@ -168,7 +168,7 @@
         validate_certs: no
       register: template_data_response
       until: current_template_url is none
-      retries: 0
+      retries: 1
       delay: 1
 
     - name: Parse template data JSON for next page
