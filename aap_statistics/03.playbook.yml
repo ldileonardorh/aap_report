@@ -37,6 +37,12 @@
     separator: ','
 
   tasks:
+
+    - name: Install jmespath library
+      pip:
+        name: jmespath
+        state: present
+
     - name: Get the date 30 days ago
       command: date --date='30 days ago' "+%Y-%m-%dT%H:%M:%S"
       register: date_30_days_ago_output
