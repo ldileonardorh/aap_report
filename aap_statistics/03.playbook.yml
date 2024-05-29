@@ -72,6 +72,7 @@
         dest: "{{ template_output_file }}"
         content: "{{ template_csv_headers | join(separator) }}\n"
 
+    # Job Block
     - name: Fetch job data and write to CSV
       vars:
         current_url: "{{ job_api_url }}&created__gte={{ job_date_filter }}"
@@ -79,9 +80,9 @@
         - name: Initialize job fetching loop
           set_fact:
             fetch_jobs: true
+            current_page: 1
 
-        - name: Repeat fetching job data until all pages are retrieved
-          # while: fetch_jobs
+        - name: Fetch job data in a loop
           block:
             - name: Fetch job data
               uri:
@@ -92,6 +93,9 @@
                 status_code: 200
                 validate_certs: no
               register: job_data_response
+              until: job_data_response is succeeded
+              retries: 5
+              delay: 10
 
             - name: Parse job data JSON
               set_fact:
@@ -108,10 +112,24 @@
               set_fact:
                 current_url: "{{ job_data.next }}"
                 fetch_jobs: "{{ job_data.next is defined and job_data.next != None }}"
+              when: job_data.next is defined and job_data.next != None
 
             - name: Check URL
               ansible.builtin.debug:
                 msg: "Current Url Job: {{ current_url }}"
+              when: job_data.next is defined and job_data.next != None
+
+          rescue:
+            - name: Handle failure
+              set_fact:
+                fetch_jobs: false
+
+        - name: Ensure loop continues until no more pages
+          set_fact:
+            fetch_jobs: false
+          when: job_data.next is not defined or job_data.next == None
+
+      # Job Block End
 
     - name: Fetch template data and write to CSV
       vars:
