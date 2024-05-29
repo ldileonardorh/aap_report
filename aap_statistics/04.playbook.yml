@@ -127,7 +127,7 @@
     
     - name: Extract and display id and type from JSON responses
       debug:
-        msg: "Page {{ item.item }} - ID: {{ item.content | from_json | json_query('data.id') }}, Type: {{ item.content | from_json | json_query('data.type') }}"
+        msg: "ID: {{ item.content | from_json | json_query('data.id') }}, Type: {{ item.content | from_json | json_query('data.type') }}"
       loop: "{{ api_responses.results }}"
 
     # - name: Setting booleans using complex argument style
