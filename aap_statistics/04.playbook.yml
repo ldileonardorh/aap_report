@@ -40,15 +40,31 @@
       ansible.builtin.debug:
         msg: "Total Rounded Templates Pages: {{ template_total_pages }}"
 
-    - name: Setting booleans using complex argument style
-      ansible.builtin.set_fact:
-        template_url_next: "{{ template_data_response.json.get('next', None) if template_data_response.json is defined else None }}"
+    - name: Loop a task based on a number
+      uri:
+        url: "{{ base_url }}{{ template_api_url }}?page={{ item }}"
+        headers: "{{ headers }}"
+        method: GET
+        return_content: yes
+        status_code: 200
+        validate_certs: no
+      loop: "{{ range(1, template_total_pages + 1) }}"
+      register: api_responses
 
-    - name: Print next url
-      ansible.builtin.debug:
-        msg: "Next Template Url: {{ template_url_next }}"
+    - name: Display API responses
+      debug:
+        msg: "Response for page {{ item.item }}: {{ item.content }}"
+      loop: "{{ api_responses.results }}"
 
-    - name: Include Task file
-      ansible.builtin.import_tasks:
-        file: tasks/02.task-fetch-templates.yml
-      when: template_url_next is defined and template_url_next != None
+    # - name: Setting booleans using complex argument style
+    #   ansible.builtin.set_fact:
+    #     template_url_next: "{{ template_data_response.json.get('next', None) if template_data_response.json is defined else None }}"
+
+    # - name: Print next url
+    #   ansible.builtin.debug:
+    #     msg: "Next Template Url: {{ template_url_next }}"
+
+    # - name: Include Task file
+    #   ansible.builtin.import_tasks:
+    #     file: tasks/02.task-fetch-templates.yml
+    #   when: template_url_next is defined and template_url_next != None
