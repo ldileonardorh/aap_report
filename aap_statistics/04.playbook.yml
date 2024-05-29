@@ -125,17 +125,19 @@
         msg: "Response for page {{ item.item }}: {{ item.content }}"
       loop: "{{ api_responses.results }}"
     
-    - name: Extract and display id and type from JSON responses
-      debug:
-        msg: "Page {{ loop.index }} - ID: {{ result.id }}, Type: {{ result.type }}"
+    - name: Extract data from each page
+      set_fact:
+        extracted_data: "{{ extracted_data | default([]) + [item.content | from_json | json_query('results')] }}"
       loop: "{{ api_responses.results }}"
       loop_control:
-        loop_var: page_result
-      vars:
-        results: "{{ page_result.content | from_json | json_query('results') }}"
-      with_items: "{{ results }}"
+        loop_var: item
+
+    - name: Display id and type from extracted data
+      debug:
+        msg: "ID: {{ item.id }}, Type: {{ item.type }}"
+      loop: "{{ extracted_data | flatten }}"
       loop_control:
-        loop_var: result
+        loop_var: item
 
     # - name: Setting booleans using complex argument style
     #   ansible.builtin.set_fact:
