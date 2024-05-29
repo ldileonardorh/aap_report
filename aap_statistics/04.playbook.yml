@@ -18,7 +18,7 @@
 
     - name: Print next url
       ansible.builtin.debug:
-        msg: "Next Template Url: {{ template_data_response.next }}"
+        msg: "Next Template Url: {{ template_data_response }}"
 
     - name: Include Task file
       ansible.builtin.import_tasks:
