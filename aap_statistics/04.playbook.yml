@@ -119,11 +119,6 @@
         validate_certs: no
       loop: "{{ range(1, (template_total_pages | int) + 1) | map('string') }}"
       register: api_responses
-
-    # - name: Display API responses
-    #   debug:
-    #     msg: "Response for page {{ item.item }}: {{ item.content }}"
-    #   loop: "{{ api_responses.results }}"
     
     - name: Extract data from each page
       set_fact:
@@ -137,21 +132,30 @@
         dest: "{{ template_output_file }}"
         line: "{{ item.summary_fields.organization.name }}{{ separator }}{{ item.summary_fields.organization.description }}{{ separator }}{{ item.id }}{{ separator }}{{ item.type }}{{ separator }}{{ item.name }}{{ separator }}{{ item.description }}{{ separator }}{{ item.summary_fields.created_by.username }}{{ separator }}{{ item.created }}{{ separator }}{{ item.modified }}{{ separator }}{{ item.playbook | default('') }}{{ separator }}{{ item.survey_enabled }}{{ separator }}{{ item.summary_fields.project.id | default('') }}{{ separator }}{{ item.summary_fields.project.name | default('') }}{{ separator }}{{ item.summary_fields.project.description | default('') }}{{ separator }}{{ item.summary_fields.recent_jobs | length }}{{ separator }}{{ item.last_job_run }}{{ separator }}{{ item.last_job_failed }}{{ separator }}{{ item.next_job_run }}"
         create: no
-      # debug:
-      #   msg: "Item Object is: {{ item.id }}"
       loop: "{{ extracted_data }}"
       loop_control:
         loop_var: item
 
-    # - name: Setting booleans using complex argument style
-    #   ansible.builtin.set_fact:
-    #     template_url_next: "{{ template_data_response.json.get('next', None) if template_data_response.json is defined else None }}"
+    ## Remote Directory
+    - name: creare remote directory
+      ansible.builtin.command:
+        cmd: mkdir -p "{{remote_path}}{{ output_folder }}"
+      delegate_to: "{{ remote_host }}"
+      become: yes
+      vars:
+        ansible_ssh_user: "{{ remote_user }}"
+        ansible_ssh_pass: "{{ remote_password }}"
+        ansible_become_pass: "{{ become_password }}"
+    ## Remote Directory END
 
-    # - name: Print next url
-    #   ansible.builtin.debug:
-    #     msg: "Next Template Url: {{ template_url_next }}"
-
-    # - name: Include Task file
-    #   ansible.builtin.import_tasks:
-    #     file: tasks/02.task-fetch-templates.yml
-    #   when: template_url_next is defined and template_url_next != None
+    ## Copy Template File to Remote Path
+    - name: TEMPLATES - Copy file over SSH
+      copy:
+        src: "{{ template_output_file }}"
+        dest: "{{remote_path}}{{ template_output_file }}"
+      delegate_to: "{{ remote_host }}"
+      become: yes
+      vars:
+        ansible_ssh_user: "{{ remote_user }}"
+        ansible_ssh_pass: "{{ remote_password }}"
+        ansible_become_pass: "{{ become_password }}"
