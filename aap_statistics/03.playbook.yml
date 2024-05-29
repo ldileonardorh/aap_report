@@ -1,15 +1,13 @@
 ---
-- name: Retrieve and Print Job Details from Ansible Automation Platform with Pagination
+- name: Gather job data and template data from API and write to CSV
   hosts: localhost
   gather_facts: no
-
   vars:
     headers:
       Authorization: "{{ bearer_token }}"
     timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
     output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
-    all_jobs: []
-    next_url: "{{ base_url }}{{ job_api_url }}"
+    # separator: '|'
     job_csv_headers:
       - 'JOB_ID'
       - 'JOB_TEMPLATE_ID'
@@ -54,7 +52,7 @@
     - name: Print result
       debug:
         msg: "Since Start Date is {{ job_date_filter }}"
-    
+
     - name: Set output folder fact
       set_fact:
         output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
@@ -76,50 +74,122 @@
         dest: "{{ template_output_file }}"
         content: "{{ template_csv_headers | join(separator) }}\n"
 
-    - name: Retrieve jobs from Ansible Automation Platform
-      uri:
-        url: "{{ next_url }}"
-        method: GET
-        headers: "{{ headers }}"
-        return_content: yes
-        status_code: 200
-        validate_certs: no
-      register: result
-      until: result.json.next is none
-      retries: 100
-      delay: 2
-
-    - name: Add retrieved jobs to the list
-      set_fact:
-        all_jobs: "{{ all_jobs + result.json.results }}"
-        next_url: "{{ result.json.next }}"
-
-    - name: Loop over paginated results
-      # until: next_url is none
-      # retries: 100
-      # delay: 2
+    - name: Fetch job data and write to CSV
+      vars:
+        current_url: "{{ base_url }}{{ job_api_url }}&created__gte={{ job_date_filter }}"
       block:
-        - name: Retrieve next page of jobs
-          uri:
-            url: "{{ base_url }}{{ next_url }}"
-            method: GET
-            headers: "{{ headers }}"
-            validate_certs: no
-          register: next_result
-
-        - name: Add jobs from next page to the list
+        - name: Initialize job fetching loop
           set_fact:
-            all_jobs: "{{ all_jobs + next_result.json.results }}"
+            fetch_jobs: true
 
-        - name: Update next URL for pagination
+        - name: Repeat fetching job data until all pages are retrieved
+          # while: fetch_jobs
+          block:
+            - name: Fetch job data
+              uri:
+                url: "{{ current_url }}"
+                headers: "{{ headers }}"
+                method: GET
+                return_content: yes
+                status_code: 200
+                validate_certs: no
+              register: job_data_response
+
+            - name: Parse job data JSON
+              set_fact:
+                job_data: "{{ job_data_response.json }}"
+
+            - name: Write job data to CSV
+              lineinfile:
+                dest: "{{ job_output_file }}"
+                line: "{{ item.id }}{{ separator }}{{ item.unified_job_template }}{{ separator }}{{ item.type }}{{ separator }}{{ item.launch_type }}{{ separator }}{{ item.started }}{{ separator }}{{ item.finished }}{{ separator }}{{ item.status }}"
+                create: no
+              loop: "{{ job_data.results }}"
+
+            - name: Set next page URL if available
+              set_fact:
+                current_url: "{{ job_data.next }}"
+                fetch_jobs: "{{ job_data.next is defined and job_data.next != None }}"
+
+            - name: Check URL
+              ansible.builtin.debug:
+                msg: "Current Url: {{ current_url }}"
+
+    - name: Fetch template data and write to CSV
+      vars:
+        current_url: "{{ base_url }}{{ template_api_url }}"
+      block:
+        - name: Initialize template fetching loop
           set_fact:
-            next_url: "{{ next_result.json.next }}"
+            fetch_templates: true
 
-    - name: Print job details
+        - name: Repeat fetching template data until all pages are retrieved
+          # while: fetch_templates
+          block:
+            - name: Fetch template data
+              uri:
+                url: "{{ current_url }}"
+                headers: "{{ headers }}"
+                method: GET
+                return_content: yes
+                status_code: 200
+                validate_certs: no
+              register: template_data_response
+
+            - name: Parse template data JSON
+              set_fact:
+                template_data: "{{ template_data_response.json }}"
+
+            - name: Write template data to CSV
+              lineinfile:
+                dest: "{{ template_output_file }}"
+                line: "{{ item.summary_fields.organization.name }}{{ separator }}{{ item.summary_fields.organization.description }}{{ separator }}{{ item.id }}{{ separator }}{{ item.type }}{{ separator }}{{ item.name }}{{ separator }}{{ item.description }}{{ separator }}{{ item.summary_fields.created_by.username }}{{ separator }}{{ item.created }}{{ separator }}{{ item.modified }}{{ separator }}{{ item.playbook | default('') }}{{ separator }}{{ item.survey_enabled }}{{ separator }}{{ item.summary_fields.project.id | default('') }}{{ separator }}{{ item.summary_fields.project.name | default('') }}{{ separator }}{{ item.summary_fields.project.description | default('') }}{{ separator }}{{ item.summary_fields.recent_jobs | length }}{{ separator }}{{ item.last_job_run }}{{ separator }}{{ item.last_job_failed }}{{ separator }}{{ item.next_job_run }}"
+                create: no
+              loop: "{{ template_data.results }}"
+
+            - name: Set next page URL if available
+              set_fact:
+                current_url: "{{ template_data.next }}"
+                fetch_templates: "{{ template_data.next is defined and template_data.next != None }}"
+
+            - name: Check URL
+              ansible.builtin.debug:
+                msg: "Current Url: {{ current_url }}"
+
+    - name: Display success message
       debug:
-        msg: >
-          {% for job in all_jobs %}
-            Job ID: {{ job.id }}
-            Job Template ID: {{ job.job_template }}
-            Execution Date: {{ job.finished }}
-          {% endfor %}
+        msg: "Job data written to {{ job_output_file }} and template data written to {{ template_output_file }}"
+
+    # Create remote directory
+    - name: creare remote directory
+      ansible.builtin.command:
+        cmd: mkdir -p "{{remote_path}}{{ output_folder }}"
+      delegate_to: "{{ remote_host }}"
+      become: yes
+      vars:
+        ansible_ssh_user: "{{ remote_user }}"
+        ansible_ssh_pass: "{{ remote_password }}"
+        ansible_become_pass: "{{ become_password }}"
+
+    # Copy data to remote hosts
+    - name: JOBS - Copy file over SSH
+      copy:
+        src: "{{ job_output_file }}"
+        dest: "{{remote_path}}{{ job_output_file }}"
+      delegate_to: "{{ remote_host }}"
+      become: yes
+      vars:
+        ansible_ssh_user: "{{ remote_user }}"
+        ansible_ssh_pass: "{{ remote_password }}"
+        ansible_become_pass: "{{ become_password }}"
+    
+    - name: TEMPLATES - Copy file over SSH
+      copy:
+        src: "{{ template_output_file }}"
+        dest: "{{remote_path}}{{ template_output_file }}"
+      delegate_to: "{{ remote_host }}"
+      become: yes
+      vars:
+        ansible_ssh_user: "{{ remote_user }}"
+        ansible_ssh_pass: "{{ remote_password }}"
+        ansible_become_pass: "{{ become_password }}"
