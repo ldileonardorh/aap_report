@@ -23,6 +23,14 @@
     - name: print total records
       ansible.builtin.debug:
         msg: "Total Template records: {{ template_total_records }}"
+    
+    - name: calculate total pages
+      ansible.builtin.set_fact:
+        template_total_pages: "{{ (template_total_records | int) / (records_per_page | int) }}"
+    
+    - name: print total records
+      ansible.builtin.debug:
+        msg: "Total Templates Pages: {{ template_total_pages }}"
 
     - name: Setting booleans using complex argument style
       ansible.builtin.set_fact:
