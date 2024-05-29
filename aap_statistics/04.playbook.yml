@@ -127,12 +127,11 @@
     
     - name: Extract and display id and type from JSON responses
       debug:
-        msg: "Page {{ page_number }} - ID: {{ result.id }}, Type: {{ result.type }}"
+        msg: "Page {{ loop.index }} - ID: {{ result.id }}, Type: {{ result.type }}"
       loop: "{{ api_responses.results }}"
       loop_control:
         loop_var: page_result
       vars:
-        page_number: "{{ loop.index }}"
         results: "{{ page_result.content | from_json | json_query('results') }}"
       with_items: "{{ results }}"
       loop_control:
