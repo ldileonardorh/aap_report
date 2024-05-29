@@ -58,6 +58,21 @@
         output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
         job_output_file: "{{ output_folder }}{{ job_template_output_file }}"
         template_output_file: "{{ output_folder }}{{ unified_template_output_file }}"
+    
+    - name: Ensure output directory exists
+      file:
+        path: "{{ output_folder }}"
+        state: directory
+
+    - name: Initialize job CSV file with headers
+      copy:
+        dest: "{{ job_output_file }}"
+        content: "{{ job_csv_headers | join(separator) }}\n"
+
+    - name: Initialize template CSV file with headers
+      copy:
+        dest: "{{ template_output_file }}"
+        content: "{{ template_csv_headers | join(separator) }}\n"
     ## Date and folders END
 
     - name: Fetch template data
@@ -108,6 +123,11 @@
     - name: Display API responses
       debug:
         msg: "Response for page {{ item.item }}: {{ item.content }}"
+      loop: "{{ api_responses.results }}"
+    
+    - name: Extract and display id and type from JSON responses
+      debug:
+        msg: "Page {{ item.item }} - ID: {{ item.content | from_json | json_query('data.id') }}, Type: {{ item.content | from_json | json_query('data.type') }}"
       loop: "{{ api_responses.results }}"
 
     # - name: Setting booleans using complex argument style
