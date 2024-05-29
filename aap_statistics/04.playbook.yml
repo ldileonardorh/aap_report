@@ -134,7 +134,7 @@
 
     - name: Display id and type from extracted data
       debug:
-        msg: "ID: {{ item.id }}, Type: {{ item.type }}"
+        msg: "{{ extracted_data }}"
       loop: "{{ extracted_data }}"
       loop_control:
         loop_var: item
