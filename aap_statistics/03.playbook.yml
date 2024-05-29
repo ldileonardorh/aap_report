@@ -100,7 +100,7 @@
         - name: Ensure loop stops if no next URL or max iterations reached
           set_fact:
             fetch_jobs: false
-          when: job_data.next is not defined or job_data.next == None or current_iteration >= max_iterations
+          when: job_data.next == None
           register: final_state
 
     - name: Debug final state
