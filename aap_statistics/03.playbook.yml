@@ -119,10 +119,10 @@
                 msg: "Current Url Job: {{ current_url }}"
               when: job_data.next is defined and job_data.next != None
 
-          rescue:
-            - name: Handle failure
-              set_fact:
-                fetch_jobs: false
+          # rescue:
+          #   - name: Handle failure
+          #     set_fact:
+          #       fetch_jobs: false
 
         - name: Ensure loop continues until no more pages
           set_fact:
