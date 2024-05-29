@@ -9,7 +9,7 @@
     timestamp: "{{ lookup('pipe', 'date +%Y%m%d%H%M%S') }}"
     output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
     all_jobs: []
-    next_url: "{{ api_url }}{{ jobs_endpoint }}"
+    next_url: "{{ base_url }}{{ job_api_url }}"
     job_csv_headers:
       - 'JOB_ID'
       - 'JOB_TEMPLATE_ID'
