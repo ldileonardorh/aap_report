@@ -127,7 +127,7 @@
     
     - name: Extract data from each page
       set_fact:
-        extracted_data: "{{ extracted_data | default([]) + [item.content | from_json | json_query('results')] }}"
+        extracted_data: "{{ extracted_data | default([]) + item.content | from_json | json_query('results') }}"
       loop: "{{ api_responses.results }}"
       loop_control:
         loop_var: item
@@ -135,7 +135,7 @@
     - name: Display id and type from extracted data
       debug:
         msg: "ID: {{ item.id }}, Type: {{ item.type }}"
-      loop: "{{ extracted_data | flatten }}"
+      loop: "{{ extracted_data }}"
       loop_control:
         loop_var: item
 
