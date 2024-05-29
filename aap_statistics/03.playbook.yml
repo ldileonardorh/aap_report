@@ -76,60 +76,39 @@
     - name: Fetch job data and write to CSV
       vars:
         current_url: "{{ job_api_url }}&created__gte={{ job_date_filter }}"
+        max_iterations: 100  # Set a high enough number to cover all pages
       block:
         - name: Initialize job fetching loop
           set_fact:
             fetch_jobs: true
-            current_page: 1
+            current_iteration: 0
 
-        - name: Fetch job data in a loop
+        - name: Loop to fetch job data
           block:
-            - name: Fetch job data
-              uri:
-                url: "{{ base_url }}{{ current_url }}"
-                headers: "{{ headers }}"
-                method: GET
-                return_content: yes
-                status_code: 200
-                validate_certs: no
-              register: job_data_response
-              until: job_data_response is succeeded
-              retries: 5
-              delay: 10
+            - include_tasks: tasks/01.task-fetch-jobs.yml
 
-            - name: Parse job data JSON
+            - name: Increment iteration counter
               set_fact:
-                job_data: "{{ job_data_response.json }}"
+                current_iteration: "{{ current_iteration + 1 }}"
 
-            - name: Write job data to CSV
-              lineinfile:
-                dest: "{{ job_output_file }}"
-                line: "{{ item.id }}{{ separator }}{{ item.unified_job_template }}{{ separator }}{{ item.type }}{{ separator }}{{ item.launch_type }}{{ separator }}{{ item.started }}{{ separator }}{{ item.finished }}{{ separator }}{{ item.status }}"
-                create: no
-              loop: "{{ job_data.results }}"
-
-            - name: Set next page URL if available
+            - name: Check if loop should continue
               set_fact:
-                current_url: "{{ job_data.next }}"
-                fetch_jobs: "{{ job_data.next is defined and job_data.next != None }}"
-              when: job_data.next is defined and job_data.next != None
+                fetch_jobs: false
+              when: job_data.next is not defined or job_data.next == None or current_iteration >= max_iterations
+          when: fetch_jobs
 
-            - name: Check URL
-              ansible.builtin.debug:
-                msg: "Current Url Job: {{ current_url }}"
-              when: job_data.next is defined and job_data.next != None
-
-          # rescue:
-          #   - name: Handle failure
-          #     set_fact:
-          #       fetch_jobs: false
-
-        - name: Ensure loop continues until no more pages
+        - name: Ensure loop stops if no next URL or max iterations reached
           set_fact:
-            fetch_jobs: true
-          when: job_data.next != None
+            fetch_jobs: false
+          when: job_data.next is not defined or job_data.next == None or current_iteration >= max_iterations
+          register: final_state
 
-      # Job Block End
+    - name: Debug final state
+      ansible.builtin.debug:
+        msg: "Final state: {{ final_state }}"
+
+    
+    # Job Block End
 
     - name: Fetch template data and write to CSV
       vars:

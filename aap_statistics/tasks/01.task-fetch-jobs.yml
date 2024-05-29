@@ -1,0 +1,32 @@
+- name: Fetch job data
+  uri:
+    url: "{{ base_url }}{{ current_url }}"
+    headers: "{{ headers }}"
+    method: GET
+    return_content: yes
+    status_code: 200
+    validate_certs: no
+  register: job_data_response
+
+- name: Parse job data JSON
+  set_fact:
+    job_data: "{{ job_data_response.json }}"
+
+- name: Write job data to CSV
+  lineinfile:
+    dest: "{{ job_output_file }}"
+    line: "{{ item.id }}{{ separator }}{{ item.unified_job_template }}{{ separator }}{{ item.type }}{{ separator }}{{ item.launch_type }}{{ separator }}{{ item.started }}{{ separator }}{{ item.finished }}{{ separator }}{{ item.status }}"
+    create: no
+  loop: "{{ job_data.results }}"
+
+- name: Set next page URL if available
+  set_fact:
+    current_url: "{{ job_data.next }}"
+    fetch_jobs: "{{ job_data.next is defined and job_data.next != None }}"
+  when: job_data.next is defined and job_data.next != None
+
+- name: Check URL
+  ansible.builtin.debug:
+    msg: "Current Url Job: {{ current_url }}"
+  when: job_data.next is defined and job_data.next != None
+
