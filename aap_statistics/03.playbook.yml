@@ -81,6 +81,8 @@
         url: "{{ next_url }}"
         method: GET
         headers: "{{ headers }}"
+        return_content: yes
+        status_code: 200
         validate_certs: no
       register: result
       until: result.json.next is none
