@@ -14,7 +14,7 @@
 
 - name: Setting booleans using complex argument style
   ansible.builtin.set_fact:
-    template_url_next: "{{ template_data_response.json.get('next', None) if template_data_response.json is defined else None }}"
+    template_url_next: "{{ template_data_response.content.next }}"
 
 - name: Print new next url
   ansible.builtin.debug:
