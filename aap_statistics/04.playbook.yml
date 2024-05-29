@@ -143,6 +143,7 @@
         dest: "{{ template_output_file }}"
         content: "{{ data_lines | join('\n') }}\n"
         remote_src: no
+      when: data_lines is defined
 
     ## Remote Directory
     - name: creare remote directory
