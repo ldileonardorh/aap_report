@@ -139,8 +139,10 @@
       blockinfile:
         path: "{{ template_output_file }}"
         block: |
+          #BEGIN ANSIBLE MANAGED BLOCK
           {{ data_lines | join('\n') }}
-
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+        
     ## Remote Directory
     - name: creare remote directory
       ansible.builtin.command:
