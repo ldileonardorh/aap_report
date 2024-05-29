@@ -94,13 +94,13 @@
             - name: Check if loop should continue
               set_fact:
                 fetch_jobs: false
-              when: job_data.next is not defined or job_data.next == None or (current_iteration | int) >= (max_iterations | int)
+              when: (current_iteration | int) >= (max_iterations | int)
           when: fetch_jobs
 
         - name: Ensure loop stops if no next URL or max iterations reached
           set_fact:
             fetch_jobs: false
-          when: job_data.next is not defined or job_data.next == None or (current_iteration | int) >= (max_iterations | int)
+          when: (current_iteration | int) >= (max_iterations | int)
           register: final_state
 
     - name: Debug final state
