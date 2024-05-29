@@ -34,7 +34,7 @@
     
     - name: Round up the decimal number
       ansible.builtin.set_fact:
-        template_total_pages: "{{ temporary_template_total_pages | float | ceil }}"
+        template_total_pages: "{{ (temporary_template_total_pages | float) | round(0, 'ceil') }}"
 
     - name: print total Pages
       ansible.builtin.debug:
