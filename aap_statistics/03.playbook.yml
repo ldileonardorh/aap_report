@@ -111,7 +111,7 @@
 
             - name: Check URL
               ansible.builtin.debug:
-                msg: "Current Url: {{ current_url }}"
+                msg: "Current Url Job: {{ current_url }}"
 
     - name: Fetch template data and write to CSV
       vars:
@@ -152,7 +152,7 @@
 
             - name: Check URL
               ansible.builtin.debug:
-                msg: "Current Url: {{ current_url }}"
+                msg: "Current Template Url: {{ current_url }}"
 
     - name: Display success message
       debug:
