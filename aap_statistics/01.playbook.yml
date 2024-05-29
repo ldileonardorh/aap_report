@@ -88,8 +88,12 @@
             validate_certs: no
           register: job_data_response
           until: job_data_response.json.next is none
-          retries: 0
-          delay: 3
+          # retries: 0
+          # delay: 3
+
+        - name: Check URL
+          ansible.builtin.debug:
+            msg: "Current Url: {{ current_url }}"
 
         - name: Parse job data JSON
           set_fact:
@@ -121,8 +125,8 @@
             validate_certs: no
           register: template_data_response
           until: template_data_response.json.next is none
-          retries: 0
-          delay: 1
+          # retries: 0
+          # delay: 1
 
         - name: Parse template data JSON
           set_fact:
