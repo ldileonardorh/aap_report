@@ -76,7 +76,7 @@
 
     - name: Fetch job data and write to CSV
       vars:
-        current_url: "{{ base_url }}{{ job_api_url }}&page_size=15000&created__gte={{ job_date_filter }}"
+        current_url: "{{ base_url }}{{ job_api_url }}&created__gte={{ job_date_filter }}"
       block:
         - name: Repeat fetching job data until all pages are retrieved
           uri:
