@@ -48,7 +48,7 @@
         return_content: yes
         status_code: 200
         validate_certs: no
-      loop: "{{ range(1, template_total_pages + 1) }}"
+      loop: "{{ range(1, (template_total_pages | int) + 1) | map('string') }}"
       register: api_responses
 
     - name: Display API responses
