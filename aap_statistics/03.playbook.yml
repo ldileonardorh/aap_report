@@ -115,7 +115,7 @@
 
     - name: Fetch template data and write to CSV
       vars:
-        current_url: "{{ template_api_url }}"
+        current_url_template_url: "{{ template_api_url }}"
       block:
         - name: Initialize template fetching loop
           set_fact:
@@ -126,7 +126,7 @@
           block:
             - name: Fetch template data
               uri:
-                url: "{{ base_url }}{{ current_url }}"
+                url: "{{ base_url }}{{ current_url_template_url }}"
                 headers: "{{ headers }}"
                 method: GET
                 return_content: yes
