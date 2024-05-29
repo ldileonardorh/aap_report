@@ -88,7 +88,8 @@
             validate_certs: no
           register: job_data_response
           until: job_data_response.json.next is none
-          
+          retries: 0
+          delay: 3
 
         - name: Check URL
           ansible.builtin.debug:
@@ -124,6 +125,8 @@
             validate_certs: no
           register: template_data_response
           until: template_data_response.json.next is none
+          retries: 0
+          delay: 1
 
         - name: Parse template data JSON
           set_fact:
