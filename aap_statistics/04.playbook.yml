@@ -129,7 +129,7 @@
 
     - name: Display id and type from extracted data
       ansible.builtin.debug:
-        msg: "{{ item.summary_fields.organization.name }}{{ separator }}{{ item.summary_fields.organization.description }}"
+        msg: "ITEM ID: {{ item.id }}{{ separator }}"
       # lineinfile:
       #   dest: "{{ template_output_file }}"
       #   line: "{{ item.summary_fields.organization.name }}{{ separator }}{{ item.summary_fields.organization.description }}{{ separator }}{{ item.id }}{{ separator }}{{ item.type }}{{ separator }}{{ item.name }}{{ separator }}{{ item.description }}{{ separator }}{{ item.summary_fields.created_by.username }}{{ separator }}{{ item.created }}{{ separator }}{{ item.modified }}{{ separator }}{{ item.playbook | default('') }}{{ separator }}{{ item.survey_enabled }}{{ separator }}{{ item.summary_fields.project.id | default('') }}{{ separator }}{{ item.summary_fields.project.name | default('') }}{{ separator }}{{ item.summary_fields.project.description | default('') }}{{ separator }}{{ item.summary_fields.recent_jobs | length }}{{ separator }}{{ item.last_job_run }}{{ separator }}{{ item.last_job_failed }}{{ separator }}{{ item.next_job_run }}"
