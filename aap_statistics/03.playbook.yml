@@ -76,7 +76,7 @@
 
     - name: Fetch job data and write to CSV
       vars:
-        current_url: "{{ base_url }}{{ job_api_url }}&created__gte={{ job_date_filter }}"
+        current_url: "{{ job_api_url }}&created__gte={{ job_date_filter }}"
       block:
         - name: Initialize job fetching loop
           set_fact:
@@ -87,7 +87,7 @@
           block:
             - name: Fetch job data
               uri:
-                url: "{{ current_url }}"
+                url: "{{ base_url }}{{ current_url }}"
                 headers: "{{ headers }}"
                 method: GET
                 return_content: yes
@@ -117,7 +117,7 @@
 
     - name: Fetch template data and write to CSV
       vars:
-        current_url: "{{ base_url }}{{ template_api_url }}"
+        current_url: "{{ template_api_url }}"
       block:
         - name: Initialize template fetching loop
           set_fact:
@@ -128,7 +128,7 @@
           block:
             - name: Fetch template data
               uri:
-                url: "{{ current_url }}"
+                url: "{{ base_url }}{{ current_url }}"
                 headers: "{{ headers }}"
                 method: GET
                 return_content: yes
