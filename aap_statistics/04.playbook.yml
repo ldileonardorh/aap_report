@@ -16,11 +16,15 @@
         validate_certs: no
       register: template_data_response
 
+    - name: Setting booleans using complex argument style
+      ansible.builtin.set_fact:
+        template_url_next: template_data_response.json.next
+
     - name: Print next url
       ansible.builtin.debug:
-        msg: "Next Template Url: {{ template_data_response.json.next }}"
+        msg: "Next Template Url: {{ template_url_next }}"
 
     - name: Include Task file
       ansible.builtin.import_tasks:
         file: tasks/02.task-fetch-templates.yml
-      when: template_data_response.json.next is defined and template_data_response.json.next != None
+      when: template_url_next is defined and template_url_next != None

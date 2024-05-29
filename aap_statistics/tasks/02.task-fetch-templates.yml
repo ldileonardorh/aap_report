@@ -1,6 +1,6 @@
 - name: Fetch template data
   uri:
-    url: "{{ base_url }}{{ template_data_response.json.next }}"
+    url: "{{ base_url }}{{ template_url_next }}"
     headers: "{{ headers }}"
     method: GET
     return_content: yes
@@ -8,7 +8,11 @@
     validate_certs: no
   register: template_data_response
 
+- name: Setting booleans using complex argument style
+  ansible.builtin.set_fact:
+    template_url_next: template_data_response.next
+
 - name: Print new next url
   ansible.builtin.debug:
-    msg: "Next Template Url: {{ template_data_response.json.next }}"
+    msg: "Next Template Url: {{ template_url_next }}"
 
