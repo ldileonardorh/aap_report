@@ -94,13 +94,13 @@
             - name: Check if loop should continue
               set_fact:
                 fetch_jobs: false
-              when: job_data.next == None
+              when: current_iteration >= max_iterations
           when: fetch_jobs
 
         - name: Ensure loop stops if no next URL or max iterations reached
           set_fact:
             fetch_jobs: false
-          when: job_data.next == None
+          when: current_iteration >= max_iterations
           register: final_state
 
     - name: Debug final state
