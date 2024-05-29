@@ -26,11 +26,19 @@
     
     - name: calculate total pages
       ansible.builtin.set_fact:
-        template_total_pages: "{{ (template_total_records | int) / (records_per_page | int) }}"
+        temporary_template_total_pages: "{{ (template_total_records | int) / (records_per_page | int) }}"
     
     - name: print total records
       ansible.builtin.debug:
-        msg: "Total Templates Pages: {{ template_total_pages }}"
+        msg: "Original Total Templates Pages: {{ temporary_template_total_pages }}"
+    
+    - name: Round up the decimal number
+      ansible.builtin.set_fact:
+        template_total_pages: "{{ temporary_template_total_pages | float | ceil }}"
+
+    - name: print total Pages
+      ansible.builtin.debug:
+        msg: "Total Rounded Templates Pages: {{ template_total_pages }}"
 
     - name: Setting booleans using complex argument style
       ansible.builtin.set_fact:
