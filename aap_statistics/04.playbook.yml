@@ -2,6 +2,9 @@
 - name: Gather job data and template data from API and write to CSV
   hosts: localhost
   gather_facts: no
+  vars:
+    headers:
+      Authorization: "{{ bearer_token }}"
   tasks:
     - name: Fetch template data
       uri:
