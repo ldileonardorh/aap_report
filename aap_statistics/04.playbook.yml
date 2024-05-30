@@ -42,6 +42,10 @@
     # JOB_TEMPLATES
     - name: Include tasks JOB_TEMPLATES
       include_tasks: tasks/02.job-templates.yml
+    
+    # JOBS
+    - name: Include tasks JOBS
+      include_tasks: tasks/03.jobs.yml
 
     ## Remote Directory
     - name: Include tasks REMOTE_FILE_TRANSFER
