@@ -120,9 +120,9 @@
       loop: "{{ range(1, (template_total_pages | int) + 1) | map('string') }}"
       register: api_responses
     
-    # - name: Debug api_responses
-    #   debug:
-    #     var: api_responses
+    - name: Debug api_responses
+      debug:
+        var: api_responses
     
     - name: Extract data from each page
       set_fact:
