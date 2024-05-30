@@ -111,7 +111,7 @@
 
     - name: Loop a task based on a number
       uri:
-        url: "{{ base_url }}{{ template_api_url }}?page={{ item }}"
+        url: "{{ base_url }}{{ template_api_url }}?page={{ item }}&page_size={{ records_per_page }}"
         headers: "{{ headers }}"
         method: GET
         return_content: yes
