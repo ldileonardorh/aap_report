@@ -26,6 +26,7 @@ This Ansible playbook gathers job and template data from specified APIs, writes 
 - `remote_user`: SSH user for the remote host
 - `remote_password`: SSH password for the remote host
 - `become_password`: Password for privilege escalation on the remote host
+- `records_per_page`: Number of record per page (pagination)
 
 ### Optional Variables
 

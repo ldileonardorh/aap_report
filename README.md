@@ -31,5 +31,9 @@
 ### AAP Statistics
 aap_statistics/README.md
 
+#### AAP Statistics Playbook Structure
+![Playbook structure](resources/aap-statistics-playbook.png)
+
+
 ### AAP Dynamic Surveys
 aap_dynamicsurvey/README.md
