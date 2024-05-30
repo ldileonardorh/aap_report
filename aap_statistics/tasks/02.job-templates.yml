@@ -43,9 +43,9 @@
   loop: "{{ range(1, (template_total_pages | int) + 1) | map('string') }}"
   register: api_responses
 
-- name: Debug api_responses
-  debug:
-    var: api_responses
+# - name: Debug api_responses
+#   debug:
+#     var: api_responses
 
 - name: Extract data from each page
   set_fact:
@@ -54,9 +54,9 @@
   loop_control:
     loop_var: item
 
-- name: Debug extracted_data
-  ansible.builtin.debug:
-    var: extracted_data
+# - name: Debug extracted_data
+#   ansible.builtin.debug:
+#     var: extracted_data
 
 - name: Prepare data lines for appending
   set_fact:

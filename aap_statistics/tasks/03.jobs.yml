@@ -45,9 +45,9 @@
     loop_var: jobs_page_item
   register: jobs_api_responses
 
-- name: Debug jobs_api_responses
-  debug:
-    var: jobs_api_responses
+# - name: Debug jobs_api_responses
+#   debug:
+#     var: jobs_api_responses
 
 - name: Extract data from each page - Jobs
   set_fact:
@@ -56,9 +56,9 @@
   loop_control:
     loop_var: jobs_item
 
-- name: Debug jobs_extracted_data
-  ansible.builtin.debug:
-    var: jobs_extracted_data
+# - name: Debug jobs_extracted_data
+#   ansible.builtin.debug:
+#     var: jobs_extracted_data
 
 - name: Prepare data lines for appending - Jobs
   set_fact:
@@ -66,7 +66,7 @@
 
 - name: Write data lines to file - Jobs
   lineinfile:
-    path: "{{ job_template_output_file }}"
+    path: "{{ job_output_file }}"
     line: "{{ job_line_item }}"
     create: no
     insertafter: EOF
