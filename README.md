@@ -37,3 +37,9 @@ aap_statistics/README.md
 
 ### AAP Dynamic Surveys
 aap_dynamicsurvey/README.md
+
+#### AAP Dynamic Surveys Playbook Structure | CREATE TEMPLATE
+![Playbook structure](resources/02.create_template.png)
+
+#### AAP Dynamic Surveys Playbook Structure | CREATE SURVEY
+![Playbook structure](resources/01.createsurvey.png)
