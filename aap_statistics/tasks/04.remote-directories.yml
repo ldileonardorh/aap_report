@@ -1,0 +1,23 @@
+## Remote Directory
+- name: creare remote directory
+  ansible.builtin.command:
+    cmd: mkdir -p "{{remote_path}}{{ output_folder }}"
+  delegate_to: "{{ remote_host }}"
+  become: yes
+  vars:
+    ansible_ssh_user: "{{ remote_user }}"
+    ansible_ssh_pass: "{{ remote_password }}"
+    ansible_become_pass: "{{ become_password }}"
+## Remote Directory END
+
+## Copy Template File to Remote Path
+- name: TEMPLATES - Copy file over SSH
+  copy:
+    src: "{{ template_output_file }}"
+    dest: "{{remote_path}}{{ template_output_file }}"
+  delegate_to: "{{ remote_host }}"
+  become: yes
+  vars:
+    ansible_ssh_user: "{{ remote_user }}"
+    ansible_ssh_pass: "{{ remote_password }}"
+    ansible_become_pass: "{{ become_password }}"
