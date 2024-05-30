@@ -36,105 +36,13 @@
       - 'NEXT_JOB_RUN'
   tasks:
     # Date and folders
-    - name: Include tasks from external file
+    - name: Include tasks Prepare Environment
       include_tasks: tasks/01.prepare-environment.yml
 
-    - name: Fetch template data
-      uri:
-        url: "{{ base_url }}{{ template_api_url }}"
-        headers: "{{ headers }}"
-        method: GET
-        return_content: yes
-        status_code: 200
-        validate_certs: no
-      register: template_data_response
-
-    - name: Propagate total records
-      ansible.builtin.set_fact:
-        template_total_records: "{{ template_data_response.json.count }}"
-    
-    - name: print total records
-      ansible.builtin.debug:
-        msg: "Total Template records: {{ template_total_records }}"
-    
-    - name: calculate total pages
-      ansible.builtin.set_fact:
-        temporary_template_total_pages: "{{ (template_total_records | int) / (records_per_page | int) }}"
-    
-    - name: print total records
-      ansible.builtin.debug:
-        msg: "Original Total Templates Pages: {{ temporary_template_total_pages }}"
-    
-    - name: Round up the decimal number
-      ansible.builtin.set_fact:
-        template_total_pages: "{{ (temporary_template_total_pages | float) | round(0, 'ceil') | int }}"
-
-    - name: print total Pages
-      ansible.builtin.debug:
-        msg: "Total Rounded Templates Pages: {{ template_total_pages }}"
-
-    - name: Loop a task based on a number
-      uri:
-        url: "{{ base_url }}{{ template_api_url }}&page={{ item }}&page_size={{ records_per_page }}"
-        headers: "{{ headers }}"
-        method: GET
-        return_content: yes
-        status_code: 200
-        validate_certs: no
-      loop: "{{ range(1, (template_total_pages | int) + 1) | map('string') }}"
-      register: api_responses
-    
-    - name: Debug api_responses
-      debug:
-        var: api_responses
-    
-    # - name: Extract data from each page
-    #   set_fact:
-    #     extracted_data: "{{ extracted_data | default([]) + item.content | from_json | json_query('results') }}"
-    #   loop: "{{ api_responses.results }}"
-    #   loop_control:
-    #     loop_var: item
-
-    - name: Extract data from each page
-      set_fact:
-        extracted_data: "{{ extracted_data | default([]) + item.json.results }}"
-      loop: "{{ api_responses.results }}"
-      loop_control:
-        loop_var: item
-
-    - name: Debug extracted_data
-      ansible.builtin.debug:
-        var: extracted_data
-
-    # - name: Prepare data lines for appending
-    #   set_fact:
-    #     data_lines: "{{ extracted_data | map(attribute='summary_fields.organization.name') | zip(extracted_data | map(attribute='summary_fields.organization.description'), extracted_data | map(attribute='id'), extracted_data | map(attribute='type'), extracted_data | map(attribute='name'), extracted_data | map(attribute='description'), extracted_data | map(attribute='summary_fields.created_by.username'), extracted_data | map(attribute='created'), extracted_data | map(attribute='modified'), extracted_data | map(attribute='playbook') | map('default', ''), extracted_data | map(attribute='survey_enabled'), extracted_data | map(attribute='summary_fields.project.id') | map('default', ''), extracted_data | map(attribute='summary_fields.project.name') | map('default', ''), extracted_data | map(attribute='summary_fields.project.description') | map('default', ''), extracted_data | map(attribute='summary_fields.recent_jobs') | map('length'), extracted_data | map(attribute='last_job_run'), extracted_data | map(attribute='last_job_failed'), extracted_data | map(attribute='next_job_run')) | map('join', '|') | list }}"
-
-    - name: Prepare data lines for appending
-      set_fact:
-        data_lines: "{{ extracted_data | map(attribute='summary_fields.organization.name') | zip(extracted_data | map(attribute='summary_fields.organization.description'), extracted_data | map(attribute='id'), extracted_data | map(attribute='type'), extracted_data | map(attribute='name'), extracted_data | map(attribute='description'), extracted_data | map(attribute='summary_fields.created_by.username'), extracted_data | map(attribute='created'), extracted_data | map(attribute='modified'), extracted_data | map(attribute='playbook') | map('default', ''), extracted_data | map(attribute='survey_enabled'), extracted_data | map(attribute='summary_fields.project.id') | map('default', ''), extracted_data | map(attribute='summary_fields.project.name') | map('default', ''), extracted_data | map(attribute='summary_fields.project.description') | map('default', ''), extracted_data | map(attribute='summary_fields.recent_jobs') | map('length'), extracted_data | map(attribute='last_job_run'), extracted_data | map(attribute='last_job_failed'), extracted_data | map(attribute='next_job_run')) | map('join', '|') | list }}"
-
-
-    # - name: Write data lines to file
-    #   lineinfile:
-    #     path: "{{ template_output_file }}"
-    #     line: "{{ item.summary_fields.organization.name }}|{{ item.summary_fields.organization.description }}|{{ item.id }}|{{ item.type }}|{{ item.name }}|{{ item.description }}|{{ item.summary_fields.created_by.username }}|{{ item.created }}|{{ item.modified }}|{{ item.playbook | default('') }}|{{ item.survey_enabled }}|{{ item.summary_fields.project.id | default('') }}|{{ item.summary_fields.project.name | default('') }}|{{ item.summary_fields.project.description | default('') }}|{{ item.summary_fields.recent_jobs | length }}|{{ item.last_job_run }}|{{ item.last_job_failed }}|{{ item.next_job_run }}"
-    #     create: no
-    #     insertafter: EOF
-    #   loop: "{{ extracted_data }}"
-    #   loop_control:
-    #     loop_var: item
-
-    - name: Write data lines to file
-      lineinfile:
-        path: "{{ template_output_file }}"
-        line: "{{ item }}"
-        create: no
-        insertafter: EOF
-      loop: "{{ data_lines }}"
-      loop_control:
-        loop_var: item
+    # JOB_TEMPLATES
+    - name: Include tasks JOB_TEMPLATES
+      include_tasks: tasks/02.job-templates.yml
 
     ## Remote Directory
-    - name: Include tasks from external file
+    - name: Include tasks REMOTE_FILE_TRANSFER
       include_tasks: tasks/04.remote-directories.yml

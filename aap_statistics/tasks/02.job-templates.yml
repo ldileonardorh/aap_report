@@ -47,13 +47,6 @@
   debug:
     var: api_responses
 
-# - name: Extract data from each page
-#   set_fact:
-#     extracted_data: "{{ extracted_data | default([]) + item.content | from_json | json_query('results') }}"
-#   loop: "{{ api_responses.results }}"
-#   loop_control:
-#     loop_var: item
-
 - name: Extract data from each page
   set_fact:
     extracted_data: "{{ extracted_data | default([]) + item.json.results }}"
@@ -65,10 +58,16 @@
   ansible.builtin.debug:
     var: extracted_data
 
-# - name: Prepare data lines for appending
-#   set_fact:
-#     data_lines: "{{ extracted_data | map(attribute='summary_fields.organization.name') | zip(extracted_data | map(attribute='summary_fields.organization.description'), extracted_data | map(attribute='id'), extracted_data | map(attribute='type'), extracted_data | map(attribute='name'), extracted_data | map(attribute='description'), extracted_data | map(attribute='summary_fields.created_by.username'), extracted_data | map(attribute='created'), extracted_data | map(attribute='modified'), extracted_data | map(attribute='playbook') | map('default', ''), extracted_data | map(attribute='survey_enabled'), extracted_data | map(attribute='summary_fields.project.id') | map('default', ''), extracted_data | map(attribute='summary_fields.project.name') | map('default', ''), extracted_data | map(attribute='summary_fields.project.description') | map('default', ''), extracted_data | map(attribute='summary_fields.recent_jobs') | map('length'), extracted_data | map(attribute='last_job_run'), extracted_data | map(attribute='last_job_failed'), extracted_data | map(attribute='next_job_run')) | map('join', '|') | list }}"
-
 - name: Prepare data lines for appending
   set_fact:
     data_lines: "{{ extracted_data | map(attribute='summary_fields.organization.name') | zip(extracted_data | map(attribute='summary_fields.organization.description'), extracted_data | map(attribute='id'), extracted_data | map(attribute='type'), extracted_data | map(attribute='name'), extracted_data | map(attribute='description'), extracted_data | map(attribute='summary_fields.created_by.username'), extracted_data | map(attribute='created'), extracted_data | map(attribute='modified'), extracted_data | map(attribute='playbook') | map('default', ''), extracted_data | map(attribute='survey_enabled'), extracted_data | map(attribute='summary_fields.project.id') | map('default', ''), extracted_data | map(attribute='summary_fields.project.name') | map('default', ''), extracted_data | map(attribute='summary_fields.project.description') | map('default', ''), extracted_data | map(attribute='summary_fields.recent_jobs') | map('length'), extracted_data | map(attribute='last_job_run'), extracted_data | map(attribute='last_job_failed'), extracted_data | map(attribute='next_job_run')) | map('join', '|') | list }}"
+
+- name: Write data lines to file
+  lineinfile:
+    path: "{{ template_output_file }}"
+    line: "{{ item }}"
+    create: no
+    insertafter: EOF
+  loop: "{{ data_lines }}"
+  loop_control:
+    loop_var: item
