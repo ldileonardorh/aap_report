@@ -1,0 +1,38 @@
+## Date and folders
+- name: Get the date 30 days ago
+  command: date --date='30 days ago' "+%Y-%m-%dT%H:%M:%S"
+  register: date_30_days_ago_output
+
+- name: Set date_30_days_ago fact
+  set_fact:
+    date_30_days_ago: "{{ date_30_days_ago_output.stdout }}"
+
+- name: Ensure my_variable is set
+  set_fact:
+    job_date_filter: "{{ start_date | default(date_30_days_ago) }}"
+
+- name: Print result
+  debug:
+    msg: "Since Start Date is {{ job_date_filter }}"
+
+- name: Set output folder fact
+  set_fact:
+    output_folder: "{{ base_output_folder }}_{{ timestamp }}/"
+    job_output_file: "{{ output_folder }}{{ job_template_output_file }}"
+    template_output_file: "{{ output_folder }}{{ unified_template_output_file }}"
+
+- name: Ensure output directory exists
+  file:
+    path: "{{ output_folder }}"
+    state: directory
+
+- name: Initialize job CSV file with headers
+  copy:
+    dest: "{{ job_output_file }}"
+    content: "{{ job_csv_headers | join(separator) }}\n"
+
+- name: Initialize template CSV file with headers
+  copy:
+    dest: "{{ template_output_file }}"
+    content: "{{ template_csv_headers | join(separator) }}\n"
+## Date and folders END
